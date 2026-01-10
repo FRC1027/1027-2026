@@ -1,7 +1,7 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
+//import com.revrobotics.spark.SparkBase.PersistMode;
+//import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -37,7 +37,8 @@ public class TurretSubsystem extends SubsystemBase {
   /** Creates a new TurretSubsystem with preconfigured SparkMax motor on CAN ID 23 */
   public TurretSubsystem() {
     turret = new SparkMax(23, MotorType.kBrushless);
-    turret.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    //turret.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    turret.configure(turretConfig, com.revrobotics.ResetMode.kResetSafeParameters, com.revrobotics.PersistMode.kPersistParameters);
   }
   
   /**
