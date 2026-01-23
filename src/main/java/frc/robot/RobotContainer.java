@@ -21,12 +21,13 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.DriveTowardTagCommand;
 import frc.robot.subsystems.ObjectRecognition;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+import frc.robot.util.Constants.OperatorConstants;
+
 import java.io.File;
 import swervelib.SwerveInputStream;
 import edu.wpi.first.wpilibj.XboxController;

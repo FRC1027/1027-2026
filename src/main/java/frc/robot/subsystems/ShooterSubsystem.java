@@ -10,8 +10,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
+import frc.robot.util.Constants;
 import frc.robot.util.Utils;
-import frc.robot.Constants;
 
 /**
  * The ShooterSubsystem controls the robot's shooting mechanism.
