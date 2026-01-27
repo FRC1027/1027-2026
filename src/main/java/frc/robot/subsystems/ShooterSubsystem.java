@@ -10,7 +10,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
-import frc.robot.util.Constants;
+import frc.robot.util.Constants.ShooterConstants;
 import frc.robot.util.Utils;
 
 /**
@@ -34,7 +34,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public ShooterSubsystem() {
         // Initialize intake motor on CAN ID 20, brushless
-        intake = new SparkMax(20, MotorType.kBrushless);
+        intake = new SparkMax(ShooterConstants.SHOOTER_MOTOR_ID, MotorType.kBrushless);
         //intake.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         intake.configure(intakeConfig, com.revrobotics.ResetMode.kResetSafeParameters, com.revrobotics.PersistMode.kPersistParameters);
     }
@@ -68,9 +68,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   /** Periodically called during simulation (currently unused). */
   @Override
-  public void simulationPeriodic() {
-  
-  }
+  public void simulationPeriodic() {}
 
   /**
      * Runs the intake forward at a fixed speed for 2 seconds, then stops.
@@ -79,8 +77,8 @@ public class ShooterSubsystem extends SubsystemBase {
      */
   public Command TimedIntake() {
     return run(() -> {
-        intake.set(Constants.SHOOTER_POWER);
-    }).withTimeout(Constants.SHOOTER_TIME)
+        intake.set(ShooterConstants.SHOOTER_POWER);
+    }).withTimeout(ShooterConstants.SHOOTER_TIME)
         .andThen(() -> intake.set(0));
   }
 
@@ -91,8 +89,8 @@ public class ShooterSubsystem extends SubsystemBase {
      */
   public Command TimedOuttake() {
     return run(() -> {
-        intake.set(Constants.SHOOTER_POWER * -1); // Reverse intake for outtake
-    }).withTimeout(Constants.SHOOTER_TIME)
+        intake.set(ShooterConstants.SHOOTER_POWER * -1); // Reverse intake for outtake
+    }).withTimeout(ShooterConstants.SHOOTER_TIME)
         .andThen(() -> intake.set(0));
   }
 }
