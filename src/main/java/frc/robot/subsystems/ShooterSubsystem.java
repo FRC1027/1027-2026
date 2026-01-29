@@ -66,31 +66,31 @@ public class ShooterSubsystem extends SubsystemBase {
         }
     }
 
-  /** Periodically called during simulation (currently unused). */
-  @Override
-  public void simulationPeriodic() {}
+    /** Periodically called during simulation (currently unused). */
+    @Override
+    public void simulationPeriodic() {}
 
-  /**
-     * Runs the intake forward at a fixed speed for 2 seconds, then stops.
-     *
-     * @return command sequence for timed intake
-     */
-  public Command TimedIntake() {
-    return run(() -> {
-        intake.set(ShooterConstants.SHOOTER_POWER);
-    }).withTimeout(ShooterConstants.SHOOTER_TIME)
-        .andThen(() -> intake.set(0));
-  }
+    /**
+         * Runs the intake forward at a fixed speed for 2 seconds, then stops.
+         *
+         * @return command sequence for timed intake
+         */
+    public Command TimedIntake() {
+        return run(() -> {
+            intake.set(ShooterConstants.SHOOTER_POWER);
+        }).withTimeout(ShooterConstants.SHOOTER_TIME)
+            .andThen(() -> intake.set(0));
+    }
 
-  /**
-     * Runs the intake in reverse at a fixed speed for 2 seconds, then stops.
-     *
-     * @return command sequence for timed outtake
-     */
-  public Command TimedOuttake() {
-    return run(() -> {
-        intake.set(ShooterConstants.SHOOTER_POWER * -1); // Reverse intake for outtake
-    }).withTimeout(ShooterConstants.SHOOTER_TIME)
-        .andThen(() -> intake.set(0));
-  }
+    /**
+         * Runs the intake in reverse at a fixed speed for 2 seconds, then stops.
+         *
+         * @return command sequence for timed outtake
+         */
+    public Command TimedOuttake() {
+        return run(() -> {
+            intake.set(ShooterConstants.SHOOTER_POWER * -1); // Reverse intake for outtake
+        }).withTimeout(ShooterConstants.SHOOTER_TIME)
+            .andThen(() -> intake.set(0));
+    }
 }
