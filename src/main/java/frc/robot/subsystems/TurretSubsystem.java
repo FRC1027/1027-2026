@@ -10,7 +10,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotContainer;
-import frc.robot.util.Constants;
+import frc.robot.util.Constants.TurretConstants;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.Utils;
 
@@ -36,7 +36,7 @@ public class TurretSubsystem extends SubsystemBase {
   
   /** Creates a new TurretSubsystem with preconfigured SparkMax motor on CAN ID 23 */
   public TurretSubsystem() {
-    turret = new SparkMax(23, MotorType.kBrushless);
+    turret = new SparkMax(TurretConstants.TURRET_MOTOR_ID, MotorType.kBrushless);
     //turret.configure(turretConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     turret.configure(turretConfig, com.revrobotics.ResetMode.kResetSafeParameters, com.revrobotics.PersistMode.kPersistParameters);
   }
@@ -62,7 +62,7 @@ public class TurretSubsystem extends SubsystemBase {
       // Only adjust if significantly misaligned
       if (Math.abs(tx) > 1.0) {
         double output = turretPower + Math.copySign(minCommand, tx);
-        double clampedOutput = MathUtil.clamp(output, -Constants.MAX_TURRET_SPEED, Constants.MAX_TURRET_SPEED);
+        double clampedOutput = MathUtil.clamp(output, -TurretConstants.MAX_TURRET_SPEED, TurretConstants.MAX_TURRET_SPEED);
         turret.set(clampedOutput);
 
         System.out.printf("Auto-Aligning: tx=%.2f, tid=%.0f, raw=%.2f, clamped=%.2f%n", tx, tid, output, clampedOutput);
@@ -103,7 +103,5 @@ public class TurretSubsystem extends SubsystemBase {
 
     /** Optional: Simulation logic (currently unused). */
     @Override
-    public void simulationPeriodic() {
-      
-    }
+    public void simulationPeriodic() {}
 }

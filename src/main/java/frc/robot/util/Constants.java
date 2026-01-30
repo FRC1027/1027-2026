@@ -44,17 +44,27 @@ public final class Constants
 
   /* ================= Shooter ================= */
 
-  /** Motor power used for shooting. */
-  public static final double SHOOTER_POWER = 0.1027;
+  public static final class ShooterConstants {
+    /** Motor power used for shooting. */
+    public static final double SHOOTER_POWER = 0.1027;
 
-  /** Duration to run shooter for intake/outtake (seconds). */
-  public static final double SHOOTER_TIME = 2.0;
+    /** Duration to run shooter for intake/outtake (seconds). */
+    public static final double SHOOTER_TIME = 2.0;
+
+    /** Motor ID for the motor used in the shooter subsystem */
+    public static final int SHOOTER_MOTOR_ID = 20;
+  }
 
 
   /* ================= Turret ================= */
 
-  /** Maximum turret speed (percent output). */
-  public static final double MAX_TURRET_SPEED = 0.5; // Max speed [-0.5, 0.5]
+  public static final class TurretConstants {
+    /** Maximum turret speed (percent output). */
+    public static final double MAX_TURRET_SPEED = 0.5; // Max speed [-0.5, 0.5]
+
+    /** Motor ID for the motor used in the turret subsystem */
+    public static final int TURRET_MOTOR_ID = 23;
+  }
 
 
   /* ================= Drivebase ================= */

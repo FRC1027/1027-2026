@@ -118,53 +118,45 @@ public class RobotContainer
                                                                                .translationHeadingOffset(Rotation2d.fromDegrees(
                                                                                    0));
   
-   // Constructs a SendableChooser variable that allows auto commands to be sent to the Smart Dashboard 
-   private final SendableChooser<Command> autoChooser;
+   // Constructs a SendableChooser variable that allows auto commands to be sent to the dashboard via NetworkTables
+   private final SendableChooser<Command> m_chooser;
 
   /**
     * The container for the robot. Contains subsystems, OI devices, and commands.
     */
   public RobotContainer()
-    {
+  {
     // Configure/register any and all future commands here
-
     configureBindings();
+    
     DriverStation.silenceJoystickConnectionWarning(true);
     NamedCommands.registerCommand("test", Commands.print("I EXIST"));
     
-    // Creates a SendableChooser that adds all of the PathPlanner Autos to the SendableChooser in the Smart Dashboard
-    autoChooser = AutoBuilder.buildAutoChooser();
-    SmartDashboard.putData("Auto Chooser", autoChooser);
+    // Creates a SendableChooser that adds all of the PathPlanner Autos to the dashboard
+    m_chooser = AutoBuilder.buildAutoChooser();
+    SmartDashboard.putData("Auto Chooser", m_chooser);
 
-     /**
-      * Adding Individual Commmads to Smart Dashboard (Not PathPlanner Related). Add the command
-      * to the Smart Dashboard with the following lines of code:
-      * 
-      * autoChooser.addOption("Name of Command", m_insertNameHere);
-      * SmartDashboard.putData("Insert Name Here", autoChooser)
-      * 
-      * If you want to set a command as the default, use the following line of code
-      * in addition to the two above:
-      * 
-      * autoChooser.setDefaultOption("Name of Command", m_insertNameHere);
-      */
+    /**
+     * Add pathplanner commands to the dashboard with the following line of code:
+     * 
+     * m_chooser.addOption("Name of Command", m_insertNameHere);
+     */
 
-      //autoChooser.addOption("TestCommand", testCommand);
-      autoChooser.addOption("Shoot At Tag 4", new AutoShootAtTag4(drivebase, m_turret, m_shooter));
-      // Default Auto: Drive forward ~1 foot, then stop
-      autoChooser.setDefaultOption("Drive Forward 1ft",
-        Commands.run(() -> drivebase.drive(
-                        new Translation2d(0.25, 0.0), // forward 0.25 m/s
-                        0.0,                           // no rotation
-                        true                           // field-relative
-                    ), drivebase)
-            .withTimeout(Units.feetToMeters(1) / 0.25)    // ~1 foot distance
-            .andThen(() -> drivebase.drive(
-                        new Translation2d(0.0, 0.0),
-                        0.0,
-                        true
-                    )) // stop robot
-      );
+    // Add other auotonomous paths here so they can appear on the dashboard
+    m_chooser.addOption("Shoot At Tag 4", new AutoShootAtTag4(drivebase, m_turret, m_shooter));
+      
+    // Default Auto: Drive forward ~1 foot, then stop
+    m_chooser.setDefaultOption("Drive Forward 1ft (Default)",
+    Commands.run(() -> drivebase.drive(
+        new Translation2d(0.25, 0.0),               // forward 0.25 m/s
+              0.0,                             // no rotation
+              true), drivebase)           // field-relative
+      .withTimeout(Units.feetToMeters(1) / 0.25)   // ~1 foot distance
+      .andThen(() -> drivebase.drive(
+        new Translation2d(0.0, 0.0),
+              0.0,
+              true))                      // stop robot
+    );
   }
 
   /**
@@ -183,18 +175,15 @@ public class RobotContainer
       m_turret.run(() -> m_turret.periodic()) // Calls periodic method in TurretSubsystem every loop
     );
 
-    // Controls alignment with apriltags with limelight/photonvision cameras via 'A' button
-    // driverXbox.a().onTrue(configure_a());
-
     // Controls a two second intake and outake of the shooter mechanism
     // driverXbox.y().onTrue(m_shooter.TimedOuttake());
     // driverXbox.x().onTrue(m_shooter.TimedIntake());
 
     // Controls the drive DriveTowardTagCommand while b button is held down
     driverXbox.b().whileTrue(m_DriveTowardTagCommand);
-
     driverXbox.x().whileTrue(m_AlignTagCommand);
 
+    // Control the object recognition subsystem toggles
     driverXbox.y().onTrue(m_ObjectRecognition.recognizeObjectsCommand());
 
 
@@ -256,7 +245,7 @@ public class RobotContainer
    */
   public Command getAutonomousCommand()
   {
-    return autoChooser.getSelected();
+    return m_chooser.getSelected();
 
     // An example command will be run in autonomous
     //return drivebase.getAutonomousCommand("New Auto");
