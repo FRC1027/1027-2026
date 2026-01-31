@@ -52,7 +52,7 @@ public class PrototypeShooter extends SubsystemBase {
      *
      * @return command sequence for timed intake
      */
-    public Command Intake() {
+    public Command Shoot() {
         return run(() -> {
             shooterMotor.set(ShooterConstants.SHOOTER_POWER);
         }).withTimeout(ShooterConstants.SHOOTER_TIME)
