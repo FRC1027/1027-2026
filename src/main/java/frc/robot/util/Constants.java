@@ -46,13 +46,16 @@ public final class Constants
 
   public static final class ShooterConstants {
     /** Motor power used for shooting. */
-    public static final double SHOOTER_POWER = 0.1027;
+    public static final double SHOOTER_POWER = 0.6;
 
     /** Duration to run shooter for intake/outtake (seconds). */
-    public static final double SHOOTER_TIME = 2.0;
+    public static final double SHOOTER_TIME = 10.0;
 
     /** Motor ID for the motor used in the shooter subsystem */
     public static final int SHOOTER_MOTOR_ID = 20;
+
+    /** Target RPS for shooting */
+    public static final double SHOOTER_TARGET_RPS = 24.667;
   }
 
 
