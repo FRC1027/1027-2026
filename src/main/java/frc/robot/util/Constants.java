@@ -52,7 +52,7 @@ public final class Constants
     public static final double SHOOTER_TIME = 10.0;
 
     /** Motor ID for the motor used in the shooter subsystem */
-    public static final int SHOOTER_MOTOR_ID = 20;
+    public static final int SHOOTER_MOTOR_ID = 23;
 
     /** Target RPS for shooting */
     public static final double SHOOTER_TARGET_RPS = 24.667;

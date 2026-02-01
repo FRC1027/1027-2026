@@ -24,7 +24,6 @@ public class DriveTowardTagCommand extends Command {
     // Constants for configuration
     private final double CAM_TO_BUMPER = 0.33; // meters (distance from camera lens to front bumper)
     private final double STOP_DISTANCE = 0.5;  // meters (target distance from bumper to tag)
-    private final int TARGET_ID = 4;           // The AprilTag ID we want to chase
     
     // Maximum speeds
     private final double maxSpeed;      // forward speed limit (m/s)
@@ -74,7 +73,8 @@ public class DriveTowardTagCommand extends Command {
         // Runs repeatedly while the command is active (approx. every 20ms)
 
         // 1. Check if we are tracking the correct tag ID
-        if (LimelightHelpers.getFiducialID("limelight") != TARGET_ID) {
+        double fid = LimelightHelpers.getFiducialID("limelight");
+        if (Double.isNaN(fid) || fid < 0.0) {
             SmartDashboard.putString("LL Status", "Tag ID not found");
             stopRobot();
             return;
@@ -158,7 +158,8 @@ public class DriveTowardTagCommand extends Command {
         // Check if we should stop automatically
         
         // 1. If we lost the tag, stop (safety)
-        boolean tagLost = LimelightHelpers.getFiducialID("limelight") != TARGET_ID;
+        double fid = LimelightHelpers.getFiducialID("limelight");
+        boolean tagLost = Double.isNaN(fid) || fid < 0.0;
         
         // 2. If we are driving forward (maxSpeed > 0) and reached the target, stop
         boolean reachedTarget = (maxSpeed > 0) && (bumperToTagDist <= STOP_DISTANCE);

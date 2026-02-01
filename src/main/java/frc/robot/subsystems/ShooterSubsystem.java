@@ -34,7 +34,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public ShooterSubsystem() {
         // Initialize intake motor on CAN ID 20, brushless
-        intake = new SparkMax(ShooterConstants.SHOOTER_MOTOR_ID, MotorType.kBrushless);
+        intake = new SparkMax(1, MotorType.kBrushless);
         //intake.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         intake.configure(intakeConfig, com.revrobotics.ResetMode.kResetSafeParameters, com.revrobotics.PersistMode.kPersistParameters);
     }
