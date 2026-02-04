@@ -26,20 +26,25 @@ public final class Constants
 
   /* ================= Robot Physical Properties ================= */
 
-  /** Robot mass in kilograms (measured weight minus bumpers). */
-  public static final double ROBOT_MASS = (148 - 20.3) * 0.453592; // lbs → kg
+  public static final class RobotProperties {
+    /** Robot mass in kilograms (measured weight minus bumpers). */
+    public static final double ROBOT_MASS = (148 - 20.3) * 0.453592; // lbs → kg
 
-  /** Center of mass used for swerve dynamics calculations. */
-  public static final Matter CHASSIS =
-      new Matter(
-          new Translation3d(0, 0, Units.inchesToMeters(8)),
-          ROBOT_MASS);
+    /** Center of mass used for swerve dynamics calculations. */
+    public static final Matter CHASSIS =
+        new Matter(
+            new Translation3d(0, 0, Units.inchesToMeters(8)),
+            ROBOT_MASS);
 
-  /** Control loop time (20ms driver station + 110ms Spark MAX latency). */
-  public static final double LOOP_TIME = 0.13; //sec
+    /** Control loop time (20ms driver station + 110ms Spark MAX latency). */
+    public static final double LOOP_TIME = 0.13; //sec
 
-  /** Maximum linear speed of the robot (m/s). */
-  public static final double MAX_SPEED = Units.feetToMeters(14.5);
+    /** Maximum linear speed of the robot (m/s). */
+    public static final double MAX_SPEED = Units.feetToMeters(14.5);
+
+    /** Distance from the camera to the front bumper (meters). */
+    public static final double CAM_TO_BUMPER_DISTANCE = 0.33;
+  }
 
 
   /* ================= Shooter ================= */
@@ -53,6 +58,9 @@ public final class Constants
 
     /** Motor ID for the motor used in the shooter subsystem */
     public static final int SHOOTER_MOTOR_ID = 23;
+
+    /** Gear ratio for the shooter wheel */
+    public static final double GEAR_RATIO = 1.0;
 
     /** Target RPS for shooting */
     public static final double SHOOTER_TARGET_RPS = 24.667;

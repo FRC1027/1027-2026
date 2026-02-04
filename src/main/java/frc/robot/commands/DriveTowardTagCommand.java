@@ -6,6 +6,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+import frc.robot.util.Constants.RobotProperties;
 import frc.robot.util.LimelightHelpers;
 
 /**
@@ -22,7 +23,6 @@ public class DriveTowardTagCommand extends Command {
     private final SwerveSubsystem drivebase;
     
     // Constants for configuration
-    private final double CAM_TO_BUMPER = 0.33; // meters (distance from camera lens to front bumper)
     private final double STOP_DISTANCE = 0.5;  // meters (target distance from bumper to tag)
     
     // Maximum speeds
@@ -109,7 +109,7 @@ public class DriveTowardTagCommand extends Command {
         double cameraToTagDist = Math.sqrt(tx * tx + ty * ty + tz * tz);
         
         // Calculate distance from bumper to tag
-        bumperToTagDist = Math.max(0.0, cameraToTagDist - CAM_TO_BUMPER);
+        bumperToTagDist = Math.max(0.0, cameraToTagDist - RobotProperties.CAM_TO_BUMPER_DISTANCE);
 
         // Update SmartDashboard for debugging
         SmartDashboard.putNumber("LL tx (m)", tx);
