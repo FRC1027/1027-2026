@@ -33,10 +33,10 @@ public class PrototypeShooter extends SubsystemBase {
     private static final double SHOOTER_WHEEL_RADIUS = 2.25 * 0.0254; // 2.25 inches to meters
 
     // Fudge factor to account for real-world conditions ( between 0 < k < 1; determine experimentally)
-    private static final double kRadiusScale = 0.85;
+    private static final double radiusEfficiency = 0.85; // ADJUST THIS VALUE BASED ON TESTING
 
     // Find the effective radius to account for ball compression, slip, and friction (meters)
-    private static final double EFFECTIVE_RADIUS = SHOOTER_WHEEL_RADIUS * kRadiusScale; // Multiple by fudge factor
+    private static final double EFFECTIVE_RADIUS = SHOOTER_WHEEL_RADIUS * radiusEfficiency; // Multiple by fudge factor
 
     // Shooter angle (radians)
     private static final double SHOOTER_ANGLE = Math.toRadians(45.0); // Convert 45 degrees to radians
@@ -104,7 +104,7 @@ public class PrototypeShooter extends SubsystemBase {
      * 
      * @return Required launch RPS to hit the target
      */
-    public double calculateLaunchRPS() {
+    public double calculateWheelRPS() {
         double bumperToTagDistance = getBumperToTagDistance();
 
         // Return NaN if distance is not valid
@@ -202,7 +202,13 @@ public class PrototypeShooter extends SubsystemBase {
      * Sets the shooter motor to a RPS calculated via relevant data from Limelight.
      */
     public void setShooterRPS() {
-        double wheelRPS = calculateLaunchRPS();
+        double wheelRPS = calculateWheelRPS();
+
+        if (!Double.isFinite(wheelRPS)) {
+            shooterMotor.set(0);
+            return;
+        }
+
         double motorRPS = wheelRPS * ShooterConstants.GEAR_RATIO;
         shooterMotor.setControl(new VelocityVoltage(motorRPS));
     }
