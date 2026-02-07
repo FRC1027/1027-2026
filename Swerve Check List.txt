@@ -99,7 +99,7 @@ https://broncbotz3481.github.io/YAGSL-Example/
 ~~~
 0-9 swerve FR d3 a2, BR d5 a4, BL d7 a6, FL d1 a8
 10-19 CANCoders FR 12, BR 13, BL 14, FL 11
-20-29 intake
+20-29 shooter
 30-39 indexer/turntable
 40-49 placement thing
 50-59 elevator
