@@ -8,6 +8,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -33,10 +34,10 @@ public class PrototypeShooter extends SubsystemBase {
     private static final double SHOOTER_WHEEL_RADIUS = 2.25 * 0.0254; // 2.25 inches to meters
 
     // Fudge factor to account for real-world conditions ( between 0 < k < 1; determine experimentally)
-    private static final double radiusEfficiency = 0.85; // ADJUST THIS VALUE BASED ON TESTING
+    private static final double DEFAULT_RADIUS_EFFICIENCY = 0.85;
 
-    // Find the effective radius to account for ball compression, slip, and friction (meters)
-    private static final double EFFECTIVE_RADIUS = SHOOTER_WHEEL_RADIUS * radiusEfficiency; // Multiple by fudge factor
+    // Key for the radius efficiency on the SmartDashboard for tuning
+    private static final String RADIUS_EFF_KEY = "Shooter/RadiusEfficiency";
 
     // Shooter angle (radians)
     private static final double SHOOTER_ANGLE = Math.toRadians(45.0); // Convert 45 degrees to radians
@@ -78,6 +79,9 @@ public class PrototypeShooter extends SubsystemBase {
         
         shooterMotor1.getConfigurator().apply(config);
         shooterMotor2.getConfigurator().apply(config);
+
+        // Initialize the radius efficiency on the SmartDashboard for tuning
+        SmartDashboard.putNumber(RADIUS_EFF_KEY, DEFAULT_RADIUS_EFFICIENCY);
     }
 
     /**
@@ -102,6 +106,21 @@ public class PrototypeShooter extends SubsystemBase {
 
         // Calculate and return the distance from the bumper to the tag
         return Math.max(0.0, cameraToTag - RobotProperties.CAM_TO_BUMPER_DISTANCE);
+    }
+
+    /**
+     * Calculates the effective radius of the shooter wheel by applying an efficiency factor 
+     * to account for real-world conditions. Allows for tuning the efficiency factor via the 
+     * SmartDashboard to improve accuracy of RPS calculations.
+     * 
+     * @return Effective radius of the shooter wheel in meters
+     */
+    private double getEffectiveRadius() {
+        double efficiency = SmartDashboard.getNumber(RADIUS_EFF_KEY, DEFAULT_RADIUS_EFFICIENCY);
+
+        // Clamp the efficiency to a reasonable range (e.g., 0.5 to 1.0) to prevent unrealistic values
+        efficiency = MathUtil.clamp(efficiency, 0.5, 1.0);
+        return SHOOTER_WHEEL_RADIUS * efficiency;
     }
 
     /**
@@ -132,7 +151,7 @@ public class PrototypeShooter extends SubsystemBase {
                                     (bumperToTagDistance * Math.tan(SHOOTER_ANGLE) - HEIGHT_DIFFERENCE)));
 
         // Convert velocity to RPS (revolutions per second)
-        double rps = velocity / (2 * Math.PI * EFFECTIVE_RADIUS); // Include fudge factor to adjust for real-world conditions
+        double rps = velocity / (2 * Math.PI * getEffectiveRadius()); // Include fudge factor to adjust for real-world conditions
 
         return rps; // Return the calculated RPS
     }
