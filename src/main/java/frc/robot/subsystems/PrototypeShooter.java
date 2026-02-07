@@ -146,7 +146,7 @@ public class PrototypeShooter extends SubsystemBase {
             return run(() -> {
                 setShooterSpeed(Utils.deadbandReturn((rightTrigger / 4), 0.1));
             });
-        } else if (leftTrigger > 0.1){
+        } else if (leftTrigger < -0.1){
             return run(() -> {
                 setShooterSpeed(Utils.deadbandReturn((leftTrigger / 4), 0.1));
             });
@@ -159,7 +159,7 @@ public class PrototypeShooter extends SubsystemBase {
 
     /**
      * Aligns the robot to the target tag and shoots if the tag ID is valid.
-     * Valid tag IDs are 4, 5, 25, and 26.
+     * Valid tag IDs are in front of Red Hub (9 or 10), in front of Blue Hub (25 or 26), or 4 for testing in the RCH.
      * 
      * @param drivebase
      * @return
@@ -167,7 +167,7 @@ public class PrototypeShooter extends SubsystemBase {
     public Command shootAlign(SwerveSubsystem drivebase) {
         double fid = LimelightHelpers.getFiducialID("limelight");
 
-        if (fid == 4 || fid == 5 || fid == 25 || fid == 26) {
+        if (fid == 4 || fid == 9 || fid == 10 || fid == 25 || fid == 26) {
             return new DriveTowardTagCommand(drivebase, 0.0, 2.0)
             .andThen(shoot());
         } else {

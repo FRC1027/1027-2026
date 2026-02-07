@@ -60,7 +60,7 @@ public final class Constants
     public static final int SHOOTER_MOTOR_ID = 23;
 
     /** Gear ratio for the shooter wheel */
-    public static final double GEAR_RATIO = 1.0;
+    public static final double GEAR_RATIO = 1.0; //Rob said likely to be 3:1
 
     /** Target RPS for shooting */
     public static final double SHOOTER_TARGET_RPS = 24.667;
