@@ -56,8 +56,11 @@ public final class Constants
     /** Duration to run shooter for intake/outtake (seconds). */
     public static final double SHOOTER_TIME = 10.0;
 
-    /** Motor ID for the motor used in the shooter subsystem */
-    public static final int SHOOTER_MOTOR_ID = 23;
+    /** Motor ID 1 for the motor used in the shooter subsystem */
+    public static final int SHOOTER_MOTOR_ID1 = 23;
+
+    /** Motor ID 2 for the motor used in the shooter subsystem */
+    public static final int SHOOTER_MOTOR_ID2 = 0; // Placeholder, update with actual ID if using a second motor
 
     /** Gear ratio for the shooter wheel */
     public static final double GEAR_RATIO = 1.0; //Rob said likely to be 3:1

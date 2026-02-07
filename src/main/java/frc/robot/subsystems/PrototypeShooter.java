@@ -54,15 +54,20 @@ public class PrototypeShooter extends SubsystemBase {
     private NetworkTable limelight = NetworkTableInstance.getDefault().getTable("limelight");
 
     // Create the TalonFX motor controller for the shooter
-    private TalonFX shooterMotor;
+    private TalonFX shooterMotor1;
 
+    // Create a second TalonFX motor controller for the shooter
+    private TalonFX shooterMotor2;
 
     /**
      * Constructor for the PrototypeShooter subsystem.
      */
     public PrototypeShooter() {
         // Initialize the motor controller with a specific CAN ID
-        shooterMotor = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID);
+        shooterMotor1 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID1);
+
+        // Initialize the second motor controller with a specific CAN ID
+        shooterMotor2 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID2);
 
         // Configure the motor controller settings
         TalonFXConfiguration config = new TalonFXConfiguration();
@@ -70,8 +75,9 @@ public class PrototypeShooter extends SubsystemBase {
         config.Slot0.kI = 0.0;
         config.Slot0.kD = 0.0;
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-
-        shooterMotor.getConfigurator().apply(config);
+        
+        shooterMotor1.getConfigurator().apply(config);
+        shooterMotor2.getConfigurator().apply(config);
     }
 
     /**
@@ -183,7 +189,10 @@ public class PrototypeShooter extends SubsystemBase {
     public Command shoot() {
         return startEnd(
             this::setShooterRPS,
-            () -> shooterMotor.setControl(new VelocityVoltage(0))
+            () -> {
+                shooterMotor1.setControl(new VelocityVoltage(0));
+                shooterMotor2.setControl(new VelocityVoltage(0));
+            }
         );
     }
 
@@ -195,7 +204,9 @@ public class PrototypeShooter extends SubsystemBase {
     public Command outtake() {
         return run(() -> {
             setShooterSpeed(-ShooterConstants.SHOOTER_POWER); // Reverse shooter for outtake
-        }).andThen(runOnce(() -> shooterMotor.set(0)));
+        }).andThen(runOnce(() -> shooterMotor1.set(0))
+          .andThen(runOnce(() -> shooterMotor2.set(0))) // Stop shooter after outtake
+        ); 
     }
 
     /**
@@ -205,12 +216,14 @@ public class PrototypeShooter extends SubsystemBase {
         double wheelRPS = calculateWheelRPS();
 
         if (!Double.isFinite(wheelRPS)) {
-            shooterMotor.set(0);
+            shooterMotor1.set(0);
+            shooterMotor2.set(0);
             return;
         }
 
         double motorRPS = wheelRPS * ShooterConstants.GEAR_RATIO;
-        shooterMotor.setControl(new VelocityVoltage(motorRPS));
+        shooterMotor1.setControl(new VelocityVoltage(motorRPS));
+        shooterMotor2.setControl(new VelocityVoltage(motorRPS));
     }
 
     /**
@@ -219,6 +232,7 @@ public class PrototypeShooter extends SubsystemBase {
      * @param speed
      */
     public void setShooterSpeed(double speed) {
-        shooterMotor.set(speed);
+        shooterMotor1.set(speed);
+        shooterMotor2.set(speed);
     }
 }
