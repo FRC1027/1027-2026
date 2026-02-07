@@ -1,8 +1,10 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
@@ -37,7 +39,7 @@ public class PrototypeShooter extends SubsystemBase {
     private static final double DEFAULT_RADIUS_EFFICIENCY = 0.85;
 
     // Key for the radius efficiency on the SmartDashboard for tuning
-    private static final String RADIUS_EFF_KEY = "Shooter/RadiusEfficiency";
+    private static final String RADIUS_DASHBOARD_KEY = "Shooter/RadiusEfficiency";
 
     // Shooter angle (radians)
     private static final double SHOOTER_ANGLE = Math.toRadians(45.0); // Convert 45 degrees to radians
@@ -64,10 +66,8 @@ public class PrototypeShooter extends SubsystemBase {
      * Constructor for the PrototypeShooter subsystem.
      */
     public PrototypeShooter() {
-        // Initialize the motor controller with a specific CAN ID
+        // Initialize the motors with specific CAN IDs
         shooterMotor1 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID1);
-
-        // Initialize the second motor controller with a specific CAN ID
         shooterMotor2 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID2);
 
         // Configure the motor controller settings
@@ -80,8 +80,11 @@ public class PrototypeShooter extends SubsystemBase {
         shooterMotor1.getConfigurator().apply(config);
         shooterMotor2.getConfigurator().apply(config);
 
+        // Set the second motor to follow the first motor with opposite direction
+        shooterMotor2.setControl(new Follower(ShooterConstants.SHOOTER_MOTOR_ID1, MotorAlignmentValue.Opposed));
+
         // Initialize the radius efficiency on the SmartDashboard for tuning
-        SmartDashboard.putNumber(RADIUS_EFF_KEY, DEFAULT_RADIUS_EFFICIENCY);
+        SmartDashboard.putNumber(RADIUS_DASHBOARD_KEY, DEFAULT_RADIUS_EFFICIENCY);
     }
 
     /**
@@ -116,7 +119,7 @@ public class PrototypeShooter extends SubsystemBase {
      * @return Effective radius of the shooter wheel in meters
      */
     private double getEffectiveRadius() {
-        double efficiency = SmartDashboard.getNumber(RADIUS_EFF_KEY, DEFAULT_RADIUS_EFFICIENCY);
+        double efficiency = SmartDashboard.getNumber(RADIUS_DASHBOARD_KEY, DEFAULT_RADIUS_EFFICIENCY);
 
         // Clamp the efficiency to a reasonable range (e.g., 0.5 to 1.0) to prevent unrealistic values
         efficiency = MathUtil.clamp(efficiency, 0.5, 1.0);
@@ -210,7 +213,6 @@ public class PrototypeShooter extends SubsystemBase {
             this::setShooterRPS,
             () -> {
                 shooterMotor1.setControl(new VelocityVoltage(0));
-                shooterMotor2.setControl(new VelocityVoltage(0));
             }
         );
     }
@@ -223,9 +225,7 @@ public class PrototypeShooter extends SubsystemBase {
     public Command outtake() {
         return run(() -> {
             setShooterSpeed(-ShooterConstants.SHOOTER_POWER); // Reverse shooter for outtake
-        }).andThen(runOnce(() -> shooterMotor1.set(0))
-          .andThen(runOnce(() -> shooterMotor2.set(0))) // Stop shooter after outtake
-        ); 
+        }).andThen(runOnce(() -> shooterMotor1.set(0))); 
     }
 
     /**
@@ -236,13 +236,11 @@ public class PrototypeShooter extends SubsystemBase {
 
         if (!Double.isFinite(wheelRPS)) {
             shooterMotor1.set(0);
-            shooterMotor2.set(0);
             return;
         }
 
         double motorRPS = wheelRPS * ShooterConstants.GEAR_RATIO;
         shooterMotor1.setControl(new VelocityVoltage(motorRPS));
-        shooterMotor2.setControl(new VelocityVoltage(motorRPS));
     }
 
     /**
@@ -252,6 +250,5 @@ public class PrototypeShooter extends SubsystemBase {
      */
     public void setShooterSpeed(double speed) {
         shooterMotor1.set(speed);
-        shooterMotor2.set(speed);
     }
 }
