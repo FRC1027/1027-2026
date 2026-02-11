@@ -25,7 +25,6 @@ public final class Constants
 
   /** Robot geometry and physical characterization constants. */
   public static final class RobotProperties {
-    
     private RobotProperties() {} // Prevent instantiation
 
     /** Robot mass in kilograms (measured weight minus bumpers). */
@@ -52,7 +51,6 @@ public final class Constants
 
   /** Shooter subsystem constants. */
   public static final class ShooterConstants {
-
     private ShooterConstants() {} // Prevent instantiation
 
     /** Manual percent output command in the range [-1.0, 1.0]. */
@@ -75,11 +73,56 @@ public final class Constants
   }
 
 
+  /* ================= Climb ================= */
+
+  public static final class ClimbConstants {
+    private ClimbConstants() {} // Prevent instantiation
+
+    /** CAN ID for the climb motor. */
+    public static final int CLIMB_MOTOR_ID = 1;
+
+    /** Position loop proportional gain for climb Motion Magic (output per rotation error). */
+    public static final double CLIMB_KP = 25.0;
+
+    /** Position loop integral gain for climb Motion Magic. */
+    public static final double CLIMB_KI = 0.0;
+
+    /** Position loop derivative gain for climb Motion Magic. */
+    public static final double CLIMB_KD = 0.0;
+
+    /** Velocity feedforward gain in volts per rotation/second. */
+    public static final double CLIMB_KV = 0.12;
+
+    /** Static feedforward gain in volts to overcome stiction. */
+    public static final double CLIMB_KS = 0.0;
+
+    /** Gravity feedforward gain in volts (set for vertical climbs if needed). */
+    public static final double CLIMB_KG = 0.0;
+
+    /** Motion Magic cruise velocity in mechanism rotations/second. */
+    public static final double CLIMB_CRUISE_VELOCITY_RPS = 25.0;
+
+    /** Motion Magic acceleration in mechanism rotations/second^2. */
+    public static final double CLIMB_ACCELERATION_RPS2 = 50.0;
+
+    /** Motion Magic jerk in mechanism rotations/second^3. */
+    public static final double CLIMB_JERK_RPS3 = 500.0;
+
+    /** Sensor-to-mechanism ratio (motor rotations per mechanism rotation). */
+    public static final double CLIMB_SENSOR_TO_MECHANISM_RATIO = 1.0;
+
+    /** Preset retracted position in mechanism rotations. */
+    public static final double CLIMB_RETRACTED_ROTATIONS = 0.0;
+
+    /** Preset extended position in mechanism rotations. */
+    public static final double CLIMB_EXTENDED_ROTATIONS = 60.0;
+  }
+
+
   /* ================= Turret ================= */
 
   /** Turret subsystem constants. */
   public static final class TurretConstants {
-
     private TurretConstants() {} // Prevent instantiation
 
     /** Maximum turret speed command in the range [-1.0, 1.0]. */
@@ -94,7 +137,6 @@ public final class Constants
 
   /** Drivebase-specific constants. */
   public static final class DrivebaseConstants {
-
     private DrivebaseConstants() {} // Prevent instantiation
 
     /** Time to hold wheel lock after disable in seconds. */
@@ -106,7 +148,6 @@ public final class Constants
 
   /** Driver and operator input constants. */
   public static class OperatorConstants {
-
     private OperatorConstants() {} // Prevent instantiation
 
     /** Global joystick deadband to prevent stick drift. */
@@ -127,7 +168,6 @@ public final class Constants
 
   /** Elevator subsystem constants and motor controller configuration. */
   public static final class ElevatorConstants {
-
     private ElevatorConstants() {} // Prevent instantiation
 
     /** Spark MAX configuration for the elevator motor controller. */

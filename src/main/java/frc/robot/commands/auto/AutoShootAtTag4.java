@@ -145,7 +145,7 @@ public class AutoShootAtTag4 extends SequentialCommandGroup {
             new WaitCommand(0.3),
 
             // Step 5: Shoot at AprilTag 4
-            shooter.TimedOuttake()
+            shooter.shoot()
 
             // --- OPTIONAL FAILSAFE ---
             // If AprilTag 4 not found within X seconds, skip to shooting anyway:
