@@ -23,56 +23,66 @@ import frc.robot.util.LimelightHelpers;
 import frc.robot.util.Utils;
 
 public class PrototypeShooter extends SubsystemBase {
-    // Minimum distance to the target (in meters)
+    // Minimum valid distance to the target (in meters) used to clamp Limelight-derived values.
     private static final double MINIMUM_DISTANCE = 90 * 0.0254; // 90 inches to meters
 
-    // Maximum distance to the target (in meters)
+    // Maximum valid distance to the target (in meters) used to clamp Limelight-derived values.
     private static final double MAXIMUM_DISTANCE = 250 * 0.0254; // 250 inches to meters
 
-    // Gravity constant (m/s^2)
+    // Gravity constant (m/s^2) used for projectile motion calculations.
     private static final double GRAVITY_CONSTANT = 9.81;
 
-    // Shooter wheel radius (meters)
+    // Physical shooter wheel radius in meters (used as the baseline before efficiency scaling).
     private static final double SHOOTER_WHEEL_RADIUS = 2.25 * 0.0254; // 2.25 inches to meters
 
-    // Fudge factor to account for real-world conditions ( between 0 < k < 1; determine experimentally)
+    // Empirical efficiency factor to account for real-world losses (slip, compression, drag, etc.).
+    // Tuned experimentally; a value in (0, 1] scales the effective wheel radius.
     private static final double DEFAULT_RADIUS_EFFICIENCY = 0.85;
 
-    // Key for the radius efficiency on the SmartDashboard for tuning
+    /*
+     * Tuning guide for RADIUS_DASHBOARD_KEY:
+     * 1) Set up the robot at a known, repeatable distance inside MINIMUM/MAXIMUM range.
+     * 2) Command a shot and observe whether shots fall short or overshoot.
+     * 3) Increase the value to raise the computed RPS (shots go farther).
+     * 4) Decrease the value to lower the computed RPS (shots go shorter).
+     * 5) Re-test at a few distances to confirm the curve stays consistent.
+     */
+    // SmartDashboard key used to live-tune radius efficiency without redeploying.
     private static final String RADIUS_DASHBOARD_KEY = "Shooter/RadiusEfficiency";
 
-    // Shooter angle (radians)
+    // Fixed shooter launch angle in radians (used in the projectile motion calculation).
     private static final double SHOOTER_ANGLE = Math.toRadians(45.0); // Convert 45 degrees to radians
 
-    // Shooter height (meters)
+    // Height of the shooter exit point above the floor, in meters.
     private static final double SHOOTER_HEIGHT = 27 * 0.0254; // 27 inches to meters
 
-    // Target height (meters)
+    // Height of the target center above the floor, in meters.
     private static final double GOAL_HEIGHT = 72 * 0.0254; // 72 inches to meters
 
-    // Height difference between target and shooter (meters)
+    // Vertical offset between the target and the shooter exit point (meters).
     private static final double HEIGHT_DIFFERENCE = GOAL_HEIGHT - SHOOTER_HEIGHT;
 
-    // NetworkTable for Limelight
+    // Limelight NetworkTable used to fetch target pose data.
     private NetworkTable limelight = NetworkTableInstance.getDefault().getTable("limelight");
 
-    // Create the TalonFX motor controller for the shooter
+    // Primary shooter motor controller (leader).
     private TalonFX shooterMotor1;
 
-    // Create a second TalonFX motor controller for the shooter
+    // Secondary shooter motor controller (follower).
     private TalonFX shooterMotor2;
 
     /**
-     * Constructor for the PrototypeShooter subsystem.
+     * Creates the shooter subsystem, configures TalonFX control gains, and
+     * sets up follower behavior and dashboard tuning entries.
      */
     public PrototypeShooter() {
-        // Initialize the motors with specific CAN IDs
+        // Initialize the shooter motors using configured CAN IDs.
         shooterMotor1 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID1);
         shooterMotor2 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID2);
 
-        // Configure the motor controller settings
+        // Configure velocity-loop gains and neutral mode for consistent flywheel behavior.
         TalonFXConfiguration config = new TalonFXConfiguration();
-        config.Slot0.kP = 0.15; // Proportional gain for velocity control (tuning may be required)
+        config.Slot0.kP = 0.15; // Proportional gain for velocity control (tuning may be required).
         config.Slot0.kI = 0.0;
         config.Slot0.kD = 0.0;
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -80,34 +90,34 @@ public class PrototypeShooter extends SubsystemBase {
         shooterMotor1.getConfigurator().apply(config);
         shooterMotor2.getConfigurator().apply(config);
 
-        // Set the second motor to follow the first motor with opposite direction
+        // Set the second motor to follow the first motor with opposite direction to match motor layout.
         shooterMotor2.setControl(new Follower(ShooterConstants.SHOOTER_MOTOR_ID1, MotorAlignmentValue.Opposed));
 
-        // Initialize the radius efficiency on the SmartDashboard for tuning
+        // Publish the radius efficiency to SmartDashboard so it can be tuned live.
         SmartDashboard.putNumber(RADIUS_DASHBOARD_KEY, DEFAULT_RADIUS_EFFICIENCY);
     }
 
     /**
      * Calculates the distance from the bumper to the target tag using Limelight data.
      * 
-     * @return Distance from bumper to target tag in meters
+     * @return Distance from bumper to target tag in meters, or NaN if the Limelight pose is unavailable.
      */
     private double getBumperToTagDistance() {
-        // Get the pose of the target relative to the camera
+        // Read the target pose in the camera coordinate frame (x=left/right, y=up/down, z=forward).
         double[] pose = limelight.getEntry("targetpose_cameraspace").getDoubleArray(new double[0]);
 
         if (pose.length < 3) {
             return Double.NaN;
         }
 
-        double tx = pose[0]; // Horizontal offset (left/right) in meters
-        double ty = pose[1]; // Vertical offset (up/down) in meters
-        double tz = pose[2]; // Forward distance (depth) in meters
+        double tx = pose[0]; // Horizontal offset (left/right) in meters.
+        double ty = pose[1]; // Vertical offset (up/down) in meters (unused for distance here).
+        double tz = pose[2]; // Forward distance (depth) in meters.
 
-        // Calculate the distance from the camera to the tag in meters
-        double cameraToTag = Math.sqrt(tx * tx + ty * ty + tz * tz);
+        // Compute planar distance from camera to tag using X/Z components.
+        double cameraToTag = Math.sqrt(tx * tx + tz * tz);
 
-        // Calculate and return the distance from the bumper to the tag
+        // Convert camera-to-tag to bumper-to-tag by subtracting the camera offset.
         return Math.max(0.0, cameraToTag - RobotProperties.CAM_TO_BUMPER_DISTANCE);
     }
 
@@ -116,12 +126,12 @@ public class PrototypeShooter extends SubsystemBase {
      * to account for real-world conditions. Allows for tuning the efficiency factor via the 
      * SmartDashboard to improve accuracy of RPS calculations.
      * 
-     * @return Effective radius of the shooter wheel in meters
+     * @return Effective radius of the shooter wheel in meters.
      */
     private double getEffectiveRadius() {
         double efficiency = SmartDashboard.getNumber(RADIUS_DASHBOARD_KEY, DEFAULT_RADIUS_EFFICIENCY);
 
-        // Clamp the efficiency to a reasonable range (e.g., 0.5 to 1.0) to prevent unrealistic values
+        // Clamp the efficiency to a reasonable range to avoid unrealistic tuning values.
         efficiency = MathUtil.clamp(efficiency, 0.5, 1.0);
         return SHOOTER_WHEEL_RADIUS * efficiency;
     }
@@ -130,102 +140,104 @@ public class PrototypeShooter extends SubsystemBase {
      * Calculates the required launch RPS (revolutions per second) to hit the target
      * based on the current distance from the bumper to the target.
      * 
-     * @return Required launch RPS to hit the target
+     * @return Required launch RPS to hit the target, or NaN if the shot is not feasible.
      */
     public double calculateWheelRPS() {
         double bumperToTagDistance = getBumperToTagDistance();
 
-        // Return NaN if distance is not valid
+        // Return NaN if the distance data is missing or invalid.
         if (!Double.isFinite(bumperToTagDistance)) {
             return Double.NaN;
         }
 
-        // Check if the target is reachable with the given shooter angle
+        // If the target is too high relative to the launch angle, the projectile motion equation would be invalid.
         if (bumperToTagDistance * Math.tan(SHOOTER_ANGLE) <= HEIGHT_DIFFERENCE) {
             return Double.NaN;
         }
 
-        // Clamp the distance to within the min and max limits
+        // Clamp the distance to reduce sensitivity to outliers or bad measurements.
         bumperToTagDistance = MathUtil.clamp(bumperToTagDistance, MINIMUM_DISTANCE, MAXIMUM_DISTANCE);
 
-        // Calculate the launch velocity using the projectile motion formula
+        // Calculate required launch velocity using projectile motion (ignoring air resistance).
         double velocity = Math.sqrt((GRAVITY_CONSTANT * bumperToTagDistance * bumperToTagDistance) / 
                                     (2 * Math.cos(SHOOTER_ANGLE) * Math.cos(SHOOTER_ANGLE) * 
                                     (bumperToTagDistance * Math.tan(SHOOTER_ANGLE) - HEIGHT_DIFFERENCE)));
 
-        // Convert velocity to RPS (revolutions per second)
-        double rps = velocity / (2 * Math.PI * getEffectiveRadius()); // Include fudge factor to adjust for real-world conditions
+        // Convert linear velocity to wheel RPS using the effective radius (includes efficiency factor).
+        double rps = velocity / (2 * Math.PI * getEffectiveRadius());
 
-        return rps; // Return the calculated RPS
+        // Return the calculated wheel speed in revolutions per second.
+        return rps;
     }
 
     /**
      * This method allows the driver to control the shooter motor manually.
      * 
-     * Left Trigger: Shoots the object out (Outtake).
-     * Right Trigger: Sucks the object in (Intake).
+     * Left Trigger: Intakes (negative speed).
+     * Right Trigger: Shoots out (positive speed).
      * No Trigger: Stops the motor.
      */
     public Command manualShoot(){
-        double rightTrigger = RobotContainer.driverXbox.getRightTriggerAxis();
-        double leftTrigger = -RobotContainer.driverXbox.getLeftTriggerAxis();
+        return run(() -> {
+            double rightTrigger = RobotContainer.driverXbox.getRightTriggerAxis();
+            double leftTrigger = -RobotContainer.driverXbox.getLeftTriggerAxis();
 
-        if (rightTrigger > 0.1){
-            return run(() -> {
+            if (rightTrigger > 0.1){
+                // Scale trigger input and apply deadband for smooth manual shooting control.
                 setShooterSpeed(Utils.deadbandReturn((rightTrigger / 4), 0.1));
-            });
-        } else if (leftTrigger < -0.1){
-            return run(() -> {
+            } else if (leftTrigger < -0.1){
+                // Scale trigger input and apply deadband for smooth manual intake control.
                 setShooterSpeed(Utils.deadbandReturn((leftTrigger / 4), 0.1));
-            });
-        } else {
-            return runOnce(() -> {
-                setShooterSpeed(0);
-            });
-        }
+            } else {
+                // No trigger input: stop the shooter motor.
+                shooterMotor1.setControl(new VelocityVoltage(0));
+            }
+        });
     }
 
     /**
      * Aligns the robot to the target tag and shoots if the tag ID is valid.
      * Valid tag IDs are in front of Red Hub (9 or 10), in front of Blue Hub (25 or 26), or 4 for testing in the RCH.
      * 
-     * @param drivebase
-     * @return
+     * @param drivebase swerve subsystem used to drive toward the tag
+     * @return command that aligns to the tag and then shoots, or no-op if tag is invalid
      */
     public Command shootAlign(SwerveSubsystem drivebase) {
-        double fid = LimelightHelpers.getFiducialID("limelight");
+        return Commands.defer(() -> {
+            double fid = LimelightHelpers.getFiducialID("limelight");
 
-        if (fid == 4 || fid == 9 || fid == 10 || fid == 25 || fid == 26) {
-            return new DriveTowardTagCommand(drivebase, 0.0, 2.0)
-            .andThen(shoot());
-        } else {
+            if (fid == 4 || fid == 9 || fid == 10 || fid == 25 || fid == 26) {
+                // Align with the tag at a fixed rotation speed, then run the shooter command.
+                return new DriveTowardTagCommand(drivebase, 0.0, 2.0)
+                .andThen(shoot());
+            }
+            // If no valid tag is seen, return a "do-nothing" command to avoid unintended motion.
             return Commands.none();
-        }
+        }, java.util.Collections.singleton(this));
     }
 
     /**
      * Runs the intake forward at a fixed speed for a certian period of time, then stops.
      *
-     * @return command sequence for timed intake
+     * @return command that spins the shooter using Limelight-based RPS until interrupted
      */
     public Command shoot() {
-        return startEnd(
+        return runEnd(
             this::setShooterRPS,
-            () -> {
-                shooterMotor1.setControl(new VelocityVoltage(0));
-            }
+            () -> shooterMotor1.setControl(new VelocityVoltage(0))
         );
     }
 
     /**
      * Runs the intake in reverse at a fixed speed for 2 seconds, then stops.
      * 
-     * @return command sequence for timed outtake
+     * @return command that reverses the shooter for a short, timed outtake
      */
     public Command outtake() {
         return run(() -> {
             setShooterSpeed(-ShooterConstants.SHOOTER_POWER); // Reverse shooter for outtake
-        }).andThen(runOnce(() -> shooterMotor1.set(0))); 
+        }).withTimeout(2.0) // Run for 2 seconds
+          .andThen(runOnce(() -> shooterMotor1.setControl(new VelocityVoltage(0)))); 
     }
 
     /**
@@ -234,19 +246,22 @@ public class PrototypeShooter extends SubsystemBase {
     public void setShooterRPS() {
         double wheelRPS = calculateWheelRPS();
 
+        // If the calculated RPS is not valid, stop the motor to avoid unintentional behavior.
         if (!Double.isFinite(wheelRPS)) {
-            shooterMotor1.set(0);
+            shooterMotor1.setControl(new VelocityVoltage(0));
             return;
         }
 
+        // Convert wheel RPS to motor RPS using the configured gear ratio.
         double motorRPS = wheelRPS * ShooterConstants.GEAR_RATIO;
         shooterMotor1.setControl(new VelocityVoltage(motorRPS));
     }
 
     /**
-     * Sets the shooter motor speed.
+     * Sets the shooter motor speed for manual control. Positive speed shoots out,
+     * negative speed intakes in, and zero stops the motor.
      * 
-     * @param speed
+     * @param speed motor output in the [-1, 1] range (sign controls direction)
      */
     public void setShooterSpeed(double speed) {
         shooterMotor1.set(speed);
