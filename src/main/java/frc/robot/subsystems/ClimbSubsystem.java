@@ -28,16 +28,16 @@ public class ClimbSubsystem extends SubsystemBase
 
         // Configure Motion Magic and closed-loop gains.
         TalonFXConfiguration config = new TalonFXConfiguration();
-        config.Slot0.kP = ClimbConstants.CLIMB_KP;
-        config.Slot0.kI = ClimbConstants.CLIMB_KI;
-        config.Slot0.kD = ClimbConstants.CLIMB_KD;
-        config.Slot0.kV = ClimbConstants.CLIMB_KV;
-        config.Slot0.kS = ClimbConstants.CLIMB_KS;
-        config.Slot0.kG = ClimbConstants.CLIMB_KG;
+        config.Slot0.kP = 25.0;
+        config.Slot0.kI = 0.0;
+        config.Slot0.kD = 0.0;
+        config.Slot0.kV = 0.12;
+        config.Slot0.kS = 0.0;
+        config.Slot0.kG = 0.0;
 
-        config.MotionMagic.MotionMagicCruiseVelocity = ClimbConstants.CLIMB_CRUISE_VELOCITY_RPS;
-        config.MotionMagic.MotionMagicAcceleration = ClimbConstants.CLIMB_ACCELERATION_RPS2;
-        config.MotionMagic.MotionMagicJerk = ClimbConstants.CLIMB_JERK_RPS3;
+        config.MotionMagic.MotionMagicCruiseVelocity = 25.0;
+        config.MotionMagic.MotionMagicAcceleration = 50.0;
+        config.MotionMagic.MotionMagicJerk = 5.0;
 
         config.Feedback.SensorToMechanismRatio = ClimbConstants.CLIMB_SENSOR_TO_MECHANISM_RATIO;
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
