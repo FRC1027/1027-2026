@@ -5,8 +5,6 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.Constants.ClimbConstants;
 
@@ -28,16 +26,30 @@ public class ClimbSubsystem extends SubsystemBase
 
         // Configure Motion Magic and closed-loop gains.
         TalonFXConfiguration config = new TalonFXConfiguration();
-        config.Slot0.kP = 25.0;
-        config.Slot0.kI = 0.0;
-        config.Slot0.kD = 0.0;
-        config.Slot0.kV = 0.12;
-        config.Slot0.kS = 0.0;
-        config.Slot0.kG = 0.0;
 
-        config.MotionMagic.MotionMagicCruiseVelocity = 25.0;
-        config.MotionMagic.MotionMagicAcceleration = 50.0;
-        config.MotionMagic.MotionMagicJerk = 5.0;
+        // PID and Feedforward
+        config.Slot0.kP = ClimbConstants.kP;
+        config.Slot0.kI = ClimbConstants.kI;
+        config.Slot0.kD = ClimbConstants.kD;
+        config.Slot0.kV = ClimbConstants.kV;
+        config.Slot0.kS = ClimbConstants.kS;
+        config.Slot0.kG = ClimbConstants.kG;
+        // config.Slot0.GravityType = GravityTypeValue.Elevator_Static; // Configure if using gravity compensation types
+
+        // Motion Magic speed, acceleration, and jerk contrainsts
+        config.MotionMagic.MotionMagicCruiseVelocity = ClimbConstants.MM_CRUISE_VELOCITY;
+        config.MotionMagic.MotionMagicAcceleration = ClimbConstants.MM_ACCELERATION;
+        config.MotionMagic.MotionMagicJerk = ClimbConstants.MM_JERK;
+
+        // Soft Limits
+        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ClimbConstants.SOFT_LIMIT_FORWARD;
+        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ClimbConstants.SOFT_LIMIT_REVERSE;
+        config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+
+        // Current Limits
+        config.CurrentLimits.StatorCurrentLimit = ClimbConstants.CURRENT_LIMIT;
+        config.CurrentLimits.StatorCurrentLimitEnable = true;
 
         config.Feedback.SensorToMechanismRatio = ClimbConstants.CLIMB_SENSOR_TO_MECHANISM_RATIO;
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -47,30 +59,12 @@ public class ClimbSubsystem extends SubsystemBase
     }
 
     /**
-     * Manual open-loop climb output in range [-1, 1].
-     *
-     * @param power motor percent output
-     */
-    public void setClimbPower(double power){
-        climbMotor1.set(MathUtil.clamp(power, -1.0, 1.0));
-    }
-
-    /**
      * Command the climb to an absolute mechanism position in rotations using Motion Magic.
      *
      * @param targetRotations mechanism rotations from zeroed reference
      */
     public void setClimbPositionRotations(double targetRotations) {
         climbMotor1.setControl(motionMagicRequest.withPosition(targetRotations));
-    }
-
-    /**
-     * Command a relative climb move in rotations from current position.
-     *
-     * @param deltaRotations signed mechanism rotation offset
-     */
-    public void moveClimbByRotations(double deltaRotations) {
-        setClimbPositionRotations(getClimbPositionRotations() + deltaRotations);
     }
 
     /**
@@ -95,14 +89,26 @@ public class ClimbSubsystem extends SubsystemBase
     }
 
     /**
+     * @return current mechanism position in inches
+     */
+    public double getClimbPositionInches() {
+        return getClimbPositionRotations() * ClimbConstants.CLIMB_INCHES_PER_MOTOR_ROTATION;
+    }
+
+    /**
+     * Command the climb to an absolute mechanism position in inches.
+     * 
+     * @param targetInches target position in inches
+     */
+    public void setClimbPositionInches(double targetInches) {
+        double targetRotations = targetInches / ClimbConstants.CLIMB_INCHES_PER_MOTOR_ROTATION;
+        setClimbPositionRotations(targetRotations);
+    }
+
+    /**
      * Zero the climb position sensor.
      */
     public void zeroClimbPosition() {
         climbMotor1.setPosition(0.0);
-    }
-
-    @Override
-    public void periodic() {
-        SmartDashboard.putNumber("Climb/PositionRotations", getClimbPositionRotations());
     }
 }

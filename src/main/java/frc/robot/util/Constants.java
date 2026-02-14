@@ -88,7 +88,55 @@ public final class Constants
     public static final double CLIMB_RETRACTED_ROTATIONS = 0.0;
 
     /** Preset extended position in mechanism rotations. */
-    public static final double CLIMB_EXTENDED_ROTATIONS = 60.0;
+    public static final double CLIMB_EXTENDED_ROTATIONS = 0.0;
+
+    /**
+     * Conversion factor from motor rotations to mechanism travel distance (e.g., inches).
+     * Calculate as: (1 / Gear Ratio) * (Lead or Pitch Diameter * PI)
+     * Example: 16:1 gearbox with 1-inch lead screw -> (1/16) * 1.0 = 0.0625 inches/rotation.
+     * Defaulting to 1.0 as placeholder.
+     */
+    public static final double CLIMB_INCHES_PER_MOTOR_ROTATION = 1.0;
+
+    /* ================= Motion Magic & PID ================= */
+
+    /** Proportional Gain. Monitor error to tune this. */
+    public static final double kP = 40.0;
+
+    /** Integral Gain. Usually 0 for positioning. */
+    public static final double kI = 0.0;
+
+    /** Derivative Gain. Dampens oscillation. */
+    public static final double kD = 0.0;
+
+    /** Velocity Feedforward. */
+    public static final double kV = 0.12;
+
+    /** Static Friction Feedforward. */
+    public static final double kS = 0.25;
+
+    /** Gravity Feedforward. IMPORTANT: Tune this to hold the robot weight! */
+    public static final double kG = 0.50; // Placeholder
+
+    /** Cruise Velocity in rotations per second. */
+    public static final double MM_CRUISE_VELOCITY = 80.0; // ~6000 RPM (motor max is ~6300 free speed)
+
+    /** Acceleration in rotations per second squared. */
+    public static final double MM_ACCELERATION = 160.0; // 0.5s to max speed
+
+    /** Jerk in rotations per second cubed. Smoothing. */
+    public static final double MM_JERK = 1600.0;
+
+    /* ================= Safety ================= */
+
+    /** Current limit in Amps to prevent motor burnout. */
+    public static final double CURRENT_LIMIT = 60.0;
+
+    /** Forward Soft Limit (Extension Limit). */
+    public static final double SOFT_LIMIT_FORWARD = CLIMB_EXTENDED_ROTATIONS;
+    
+    /** Reverse Soft Limit (Retraction Limit). */
+    public static final double SOFT_LIMIT_REVERSE = CLIMB_RETRACTED_ROTATIONS;
   }
 
 
