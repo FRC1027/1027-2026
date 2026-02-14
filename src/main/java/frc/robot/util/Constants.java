@@ -56,20 +56,53 @@ public final class Constants
     /** Manual percent output command in the range [-1.0, 1.0]. */
     public static final double SHOOTER_POWER = 0.6;
 
-    /** Duration to run shooter for intake/outtake in seconds. */
-    public static final double SHOOTER_TIME = 10.0;
-
     /** CAN ID for the primary shooter motor. */
-    public static final int SHOOTER_MOTOR_ID1 = 23;
+    public static final int SHOOTER_MOTOR_ID1 = 0;
 
-    /** CAN ID for the follower shooter motor (set to a real ID when used). */
+    /** CAN ID for the follower shooter motor. */
     public static final int SHOOTER_MOTOR_ID2 = 0;
 
     /** Gear ratio from motor to shooter wheel (motor rotations per wheel rotation). */
     public static final double GEAR_RATIO = 1.0; // Expected to be ~3:1 according to Rob
 
-    /** Default target wheel RPS for fixed-speed shooting. */
-    public static final double SHOOTER_TARGET_RPS = 24.667;
+    // Minimum valid distance to the target (in meters) used to clamp Limelight-derived values.
+    public static final double MINIMUM_DISTANCE = 90 * 0.0254; // 90 inches to meters
+
+    // Maximum valid distance to the target (in meters) used to clamp Limelight-derived values.
+    public static final double MAXIMUM_DISTANCE = 250 * 0.0254; // 250 inches to meters
+
+    // Gravity constant (m/s^2) used for projectile motion calculations.
+    public static final double GRAVITY_CONSTANT = 9.81;
+
+    // Physical shooter wheel radius in meters (used as the baseline before efficiency scaling).
+    public static final double SHOOTER_WHEEL_RADIUS = 2.25 * 0.0254; // 2.25 inches to meters
+
+    // Empirical efficiency factor to account for real-world losses (slip, compression, drag, etc.).
+    // Tuned experimentally; a value in (0, 1] scales the effective wheel radius.
+    public static final double DEFAULT_RADIUS_EFFICIENCY = 0.85;
+
+    /*
+     * Tuning guide for RADIUS_DASHBOARD_KEY:
+     * 1) Set up the robot at a known, repeatable distance inside MINIMUM/MAXIMUM range.
+     * 2) Command a shot and observe whether shots fall short or overshoot.
+     * 3) Increase the value to raise the computed RPS (shots go farther).
+     * 4) Decrease the value to lower the computed RPS (shots go shorter).
+     * 5) Re-test at a few distances to confirm the curve stays consistent.
+     */
+    // SmartDashboard key used to live-tune radius efficiency without redeploying.
+    public static final String RADIUS_DASHBOARD_KEY = "Shooter/RadiusEfficiency";
+
+    // Fixed shooter launch angle in radians (used in the projectile motion calculation).
+    public static final double SHOOTER_ANGLE = Math.toRadians(45.0); // Convert 45 degrees to radians
+
+    // Height of the shooter exit point above the floor, in meters.
+    public static final double SHOOTER_HEIGHT = 27 * 0.0254; // 27 inches to meters
+
+    // Height of the target center above the floor, in meters.
+    public static final double GOAL_HEIGHT = 72 * 0.0254; // 72 inches to meters
+
+    // Vertical offset between the target and the shooter exit point (meters).
+    public static final double HEIGHT_DIFFERENCE = GOAL_HEIGHT - SHOOTER_HEIGHT;
   }
 
 
@@ -79,7 +112,7 @@ public final class Constants
     private ClimbConstants() {} // Prevent instantiation
 
     /** CAN ID for the climb motor. */
-    public static final int CLIMB_MOTOR_ID = 1;
+    public static final int CLIMB_MOTOR_ID = 0;
 
     /** Sensor-to-mechanism ratio (motor rotations per mechanism rotation). */
     public static final double CLIMB_SENSOR_TO_MECHANISM_RATIO = 1.0;
@@ -140,17 +173,17 @@ public final class Constants
   }
 
 
-  /* ================= Turret ================= */
+  /* ================= Hopper ================= */
 
-  /** Turret subsystem constants. */
-  public static final class TurretConstants {
-    private TurretConstants() {} // Prevent instantiation
+  /** Hopper subsystem constants. */
+  public static final class HopperConstants {
+    private HopperConstants() {} // Prevent instantiation
 
-    /** Maximum turret speed command in the range [-1.0, 1.0]. */
-    public static final double MAX_TURRET_SPEED = 0.5; // Runtime code should clamp to [-0.5, 0.5].
+    /** CAN ID for the primary hopper motor. */
+    public static final int HOPPER_MOTOR_ID1 = 0;
 
-    /** CAN ID for the turret motor. */
-    public static final int TURRET_MOTOR_ID = 23;
+    /** CAN ID for the follower hopper motor. */
+    public static final int HOPPER_MOTOR_ID2 = 0;
   }
 
 
@@ -206,5 +239,19 @@ public final class Constants
         .pid(0.1, 0.0, 0.0)
         .outputRange(-1, 1);
     }
+  }
+
+
+  /* ================= Turret ================= */
+
+  /** Turret subsystem constants. */
+  public static final class TurretConstants {
+    private TurretConstants() {} // Prevent instantiation
+
+    /** Maximum turret speed command in the range [-1.0, 1.0]. */
+    public static final double MAX_TURRET_SPEED = 0.5; // Runtime code should clamp to [-0.5, 0.5].
+
+    /** CAN ID for the turret motor. */
+    public static final int TURRET_MOTOR_ID = 23;
   }
 }

@@ -8,8 +8,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.Constants.ClimbConstants;
 
-public class ClimbSubsystem extends SubsystemBase
-{
+public class ClimbSubsystem extends SubsystemBase {
     // Primary climb motor controller.
     private final TalonFX climbMotor1;
 

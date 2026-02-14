@@ -23,45 +23,6 @@ import frc.robot.util.LimelightHelpers;
 import frc.robot.util.Utils;
 
 public class ShooterSubsystem extends SubsystemBase {
-    // Minimum valid distance to the target (in meters) used to clamp Limelight-derived values.
-    private static final double MINIMUM_DISTANCE = 90 * 0.0254; // 90 inches to meters
-
-    // Maximum valid distance to the target (in meters) used to clamp Limelight-derived values.
-    private static final double MAXIMUM_DISTANCE = 250 * 0.0254; // 250 inches to meters
-
-    // Gravity constant (m/s^2) used for projectile motion calculations.
-    private static final double GRAVITY_CONSTANT = 9.81;
-
-    // Physical shooter wheel radius in meters (used as the baseline before efficiency scaling).
-    private static final double SHOOTER_WHEEL_RADIUS = 2.25 * 0.0254; // 2.25 inches to meters
-
-    // Empirical efficiency factor to account for real-world losses (slip, compression, drag, etc.).
-    // Tuned experimentally; a value in (0, 1] scales the effective wheel radius.
-    private static final double DEFAULT_RADIUS_EFFICIENCY = 0.85;
-
-    /*
-     * Tuning guide for RADIUS_DASHBOARD_KEY:
-     * 1) Set up the robot at a known, repeatable distance inside MINIMUM/MAXIMUM range.
-     * 2) Command a shot and observe whether shots fall short or overshoot.
-     * 3) Increase the value to raise the computed RPS (shots go farther).
-     * 4) Decrease the value to lower the computed RPS (shots go shorter).
-     * 5) Re-test at a few distances to confirm the curve stays consistent.
-     */
-    // SmartDashboard key used to live-tune radius efficiency without redeploying.
-    private static final String RADIUS_DASHBOARD_KEY = "Shooter/RadiusEfficiency";
-
-    // Fixed shooter launch angle in radians (used in the projectile motion calculation).
-    private static final double SHOOTER_ANGLE = Math.toRadians(45.0); // Convert 45 degrees to radians
-
-    // Height of the shooter exit point above the floor, in meters.
-    private static final double SHOOTER_HEIGHT = 27 * 0.0254; // 27 inches to meters
-
-    // Height of the target center above the floor, in meters.
-    private static final double GOAL_HEIGHT = 72 * 0.0254; // 72 inches to meters
-
-    // Vertical offset between the target and the shooter exit point (meters).
-    private static final double HEIGHT_DIFFERENCE = GOAL_HEIGHT - SHOOTER_HEIGHT;
-
     // Limelight NetworkTable used to fetch target pose data.
     private NetworkTable limelight = NetworkTableInstance.getDefault().getTable("limelight");
 
@@ -75,7 +36,7 @@ public class ShooterSubsystem extends SubsystemBase {
      * Creates the shooter subsystem, configures TalonFX control gains, and
      * sets up follower behavior and dashboard tuning entries.
      */
-    public ShooterSubsystem() {
+    public ShooterSubsystem(){
         // Initialize the shooter motors using configured CAN IDs.
         shooterMotor1 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID1);
         shooterMotor2 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID2);
@@ -91,10 +52,10 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotor2.getConfigurator().apply(config);
 
         // Set the second motor to follow the first motor with opposite direction to match motor layout.
-        shooterMotor2.setControl(new Follower(ShooterConstants.SHOOTER_MOTOR_ID1, MotorAlignmentValue.Opposed));
+        shooterMotor2.setControl(new Follower(ShooterConstants.SHOOTER_MOTOR_ID1, MotorAlignmentValue.Opposed)); // Check if it should be Opposed or Aligned
 
         // Publish the radius efficiency to SmartDashboard so it can be tuned live.
-        SmartDashboard.putNumber(RADIUS_DASHBOARD_KEY, DEFAULT_RADIUS_EFFICIENCY);
+        SmartDashboard.putNumber(ShooterConstants.RADIUS_DASHBOARD_KEY, ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
     }
 
     /**
@@ -129,11 +90,11 @@ public class ShooterSubsystem extends SubsystemBase {
      * @return Effective radius of the shooter wheel in meters.
      */
     private double getEffectiveRadius() {
-        double efficiency = SmartDashboard.getNumber(RADIUS_DASHBOARD_KEY, DEFAULT_RADIUS_EFFICIENCY);
+        double efficiency = SmartDashboard.getNumber(ShooterConstants.RADIUS_DASHBOARD_KEY, ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
 
         // Clamp the efficiency to a reasonable range to avoid unrealistic tuning values.
         efficiency = MathUtil.clamp(efficiency, 0.5, 1.0);
-        return SHOOTER_WHEEL_RADIUS * efficiency;
+        return ShooterConstants.SHOOTER_WHEEL_RADIUS * efficiency;
     }
 
     /**
@@ -151,17 +112,17 @@ public class ShooterSubsystem extends SubsystemBase {
         }
 
         // If the target is too high relative to the launch angle, the projectile motion equation would be invalid.
-        if (bumperToTagDistance * Math.tan(SHOOTER_ANGLE) <= HEIGHT_DIFFERENCE) {
+        if (bumperToTagDistance * Math.tan(ShooterConstants.SHOOTER_ANGLE) <= ShooterConstants.HEIGHT_DIFFERENCE) {
             return Double.NaN;
         }
 
         // Clamp the distance to reduce sensitivity to outliers or bad measurements.
-        bumperToTagDistance = MathUtil.clamp(bumperToTagDistance, MINIMUM_DISTANCE, MAXIMUM_DISTANCE);
+        bumperToTagDistance = MathUtil.clamp(bumperToTagDistance, ShooterConstants.MINIMUM_DISTANCE, ShooterConstants.MAXIMUM_DISTANCE);
 
         // Calculate required launch velocity using projectile motion (ignoring air resistance).
-        double velocity = Math.sqrt((GRAVITY_CONSTANT * bumperToTagDistance * bumperToTagDistance) / 
-                                    (2 * Math.cos(SHOOTER_ANGLE) * Math.cos(SHOOTER_ANGLE) * 
-                                    (bumperToTagDistance * Math.tan(SHOOTER_ANGLE) - HEIGHT_DIFFERENCE)));
+        double velocity = Math.sqrt((ShooterConstants.GRAVITY_CONSTANT * bumperToTagDistance * bumperToTagDistance) / 
+                                    (2 * Math.cos(ShooterConstants.SHOOTER_ANGLE) * Math.cos(ShooterConstants.SHOOTER_ANGLE) * 
+                                    (bumperToTagDistance * Math.tan(ShooterConstants.SHOOTER_ANGLE) - ShooterConstants.HEIGHT_DIFFERENCE)));
 
         // Convert linear velocity to wheel RPS using the effective radius (includes efficiency factor).
         double rps = velocity / (2 * Math.PI * getEffectiveRadius());
