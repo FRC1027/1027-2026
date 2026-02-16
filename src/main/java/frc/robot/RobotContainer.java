@@ -30,7 +30,6 @@ import frc.robot.util.Constants.OperatorConstants;
 
 import java.io.File;
 import swervelib.SwerveInputStream;
-import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.commands.auto.AutoShootAtTag4;
 
 /**
@@ -42,7 +41,7 @@ public class RobotContainer
 {
   // Driver and Mechanism controllers
   public static final CommandXboxController driverXbox = new CommandXboxController(0);
-  public static final XboxController mechXbox = new XboxController(1);
+  public static final CommandXboxController mechXbox = new CommandXboxController(1);
 
   // The robot's subsystems and commands are defined here...
   private final SwerveSubsystem drivebase = new SwerveSubsystem(

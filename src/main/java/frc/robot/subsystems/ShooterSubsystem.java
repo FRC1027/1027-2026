@@ -140,18 +140,18 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public Command manualShoot(){
         return run(() -> {
-            double rightTrigger = RobotContainer.driverXbox.getRightTriggerAxis();
-            double leftTrigger = -RobotContainer.driverXbox.getLeftTriggerAxis();
+            double rightTrigger = Utils.deadbandReturn(RobotContainer.driverXbox.getRightTriggerAxis(), 0.1);
+            double leftTrigger = -Utils.deadbandReturn(RobotContainer.driverXbox.getLeftTriggerAxis(), 0.1);
 
-            if (rightTrigger > 0.1){
-                // Scale trigger input and apply deadband for smooth manual shooting control.
-                setShooterSpeed(Utils.deadbandReturn((rightTrigger / 4), 0.1));
-            } else if (leftTrigger < -0.1){
-                // Scale trigger input and apply deadband for smooth manual intake control.
-                setShooterSpeed(Utils.deadbandReturn((leftTrigger / 4), 0.1));
+            if (rightTrigger > 0.0){
+                // Scale trigger input after applying deadband for smooth manual shooting control.
+                setShooterSpeed(rightTrigger / 4);
+            } else if (leftTrigger < 0.0){
+                // Scale trigger input after applying deadband for smooth manual intake control.
+                setShooterSpeed(leftTrigger / 4);
             } else {
                 // No trigger input: stop the shooter motor.
-                shooterMotor1.setControl(new VelocityVoltage(0));
+                setShooterSpeed(0.0);
             }
         });
     }
