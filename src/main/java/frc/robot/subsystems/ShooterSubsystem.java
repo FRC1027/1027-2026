@@ -19,12 +19,13 @@ import frc.robot.commands.DriveTowardTagCommand;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.ShooterConstants;
 import frc.robot.util.Constants.RobotProperties;
+import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.Utils;
 
 public class ShooterSubsystem extends SubsystemBase {
-    // Limelight NetworkTable used to fetch target pose data.
-    private NetworkTable limelight = NetworkTableInstance.getDefault().getTable("limelight");
+    // Limelight NetworkTable used to fetch target 3D pose data.
+    private NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
     // Primary shooter motor controller (leader).
     private TalonFX shooterMotor1;
@@ -36,7 +37,7 @@ public class ShooterSubsystem extends SubsystemBase {
      * Creates the shooter subsystem, configures TalonFX control gains, and
      * sets up follower behavior and dashboard tuning entries.
      */
-    public ShooterSubsystem(){
+    public ShooterSubsystem() {
         // Initialize the shooter motors using configured CAN IDs.
         shooterMotor1 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID1);
         shooterMotor2 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID2);
@@ -55,31 +56,7 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotor2.setControl(new Follower(ShooterConstants.SHOOTER_MOTOR_ID1, MotorAlignmentValue.Opposed)); // Check if it should be Opposed or Aligned
 
         // Publish the radius efficiency to SmartDashboard so it can be tuned live.
-        SmartDashboard.putNumber(ShooterConstants.RADIUS_DASHBOARD_KEY, ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
-    }
-
-    /**
-     * Calculates the distance from the bumper to the target tag using Limelight data.
-     * 
-     * @return Distance from bumper to target tag in meters, or NaN if the Limelight pose is unavailable.
-     */
-    private double getBumperToTagDistance() {
-        // Read the target pose in the camera coordinate frame (x=left/right, y=up/down, z=forward).
-        double[] pose = limelight.getEntry("targetpose_cameraspace").getDoubleArray(new double[0]);
-
-        if (pose.length < 3) {
-            return Double.NaN;
-        }
-
-        double tx = pose[0]; // Horizontal offset (left/right) in meters.
-        double ty = pose[1]; // Vertical offset (up/down) in meters (unused for distance here).
-        double tz = pose[2]; // Forward distance (depth) in meters.
-
-        // Compute planar distance from camera to tag using X/Z components.
-        double cameraToTag = Math.sqrt(tx * tx + tz * tz);
-
-        // Convert camera-to-tag to bumper-to-tag by subtracting the camera offset.
-        return Math.max(0.0, cameraToTag - RobotProperties.CAM_TO_BUMPER_DISTANCE);
+        SmartDashboard.putNumber("Shooter/RadiusEfficiency", ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
     }
 
     /**
@@ -90,7 +67,7 @@ public class ShooterSubsystem extends SubsystemBase {
      * @return Effective radius of the shooter wheel in meters.
      */
     private double getEffectiveRadius() {
-        double efficiency = SmartDashboard.getNumber(ShooterConstants.RADIUS_DASHBOARD_KEY, ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
+        double efficiency = SmartDashboard.getNumber("Shooter/RadiusEfficiency", ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
 
         // Clamp the efficiency to a reasonable range to avoid unrealistic tuning values.
         efficiency = MathUtil.clamp(efficiency, 0.5, 1.0);
@@ -104,7 +81,8 @@ public class ShooterSubsystem extends SubsystemBase {
      * @return Required launch RPS to hit the target, or NaN if the shot is not feasible.
      */
     public double calculateWheelRPS() {
-        double bumperToTagDistance = getBumperToTagDistance();
+        // Calculate the distance from the bumper to the target tag using Limelight data.
+        double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight);
 
         // Return NaN if the distance data is missing or invalid.
         if (!Double.isFinite(bumperToTagDistance)) {
@@ -138,7 +116,7 @@ public class ShooterSubsystem extends SubsystemBase {
      * Right Trigger: Shoots out (positive speed).
      * No Trigger: Stops the motor.
      */
-    public Command manualShoot(){
+    public Command manualShoot() {
         return run(() -> {
             double rightTrigger = Utils.deadbandReturn(RobotContainer.driverXbox.getRightTriggerAxis(), 0.1);
             double leftTrigger = -Utils.deadbandReturn(RobotContainer.driverXbox.getLeftTriggerAxis(), 0.1);

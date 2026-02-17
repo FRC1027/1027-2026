@@ -27,7 +27,7 @@ public class HopperSubsystem extends SubsystemBase {
      * Creates the hopper subsystem, configures both TalonFX motors, and
      * sets up the follower relationship for the second motor.
      */
-    public HopperSubsystem(){
+    public HopperSubsystem() {
         // Initialize hopper motors using configured CAN IDs.
         hopperMotor1 = new TalonFX(HopperConstants.HOPPER_MOTOR_ID1);
         hopperMotor2 = new TalonFX(HopperConstants.HOPPER_MOTOR_ID2);
@@ -51,7 +51,7 @@ public class HopperSubsystem extends SubsystemBase {
      * Manual hopper control using driver bumpers:
      * right bumper feeds forward, left bumper reverses, neither stops.
      */
-    public Command manualHopperControl(){
+    public Command manualHopperControl() {
         return run(() -> {
             Trigger rightBumper = RobotContainer.driverXbox.rightBumper();
             Trigger leftBumper = RobotContainer.driverXbox.leftBumper();

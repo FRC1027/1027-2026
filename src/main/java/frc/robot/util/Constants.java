@@ -17,8 +17,7 @@ import swervelib.math.Matter;
  *
  * It is recommended to statically import this class (or one of its inner classes) where needed.
  */
-public final class Constants
-{
+public final class Constants {
   private Constants() {} // Prevent instantiation
 
   /* ================= Robot Physical Properties ================= */
@@ -31,10 +30,9 @@ public final class Constants
     public static final double ROBOT_MASS = (148 - 20.3) * 0.453592; // lbs to kg
 
     /** Center of mass used for swerve dynamics calculations. */
-    public static final Matter CHASSIS =
-        new Matter(
-            new Translation3d(0, 0, Units.inchesToMeters(8)),
-            ROBOT_MASS);
+    public static final Matter CHASSIS = new Matter(
+        new Translation3d(0, 0, Units.inchesToMeters(8)),
+        ROBOT_MASS);
 
     /** Control loop period in seconds (20ms DS + ~110ms controller latency). */
     public static final double LOOP_TIME = 0.13;
@@ -45,7 +43,6 @@ public final class Constants
     /** Distance from the camera to the front bumper in meters. */
     public static final double CAM_TO_BUMPER_DISTANCE = 0.33;
   }
-
 
   /* ================= Shooter ================= */
 
@@ -65,46 +62,46 @@ public final class Constants
     /** Gear ratio from motor to shooter wheel (motor rotations per wheel rotation). */
     public static final double GEAR_RATIO = 1.0; // Expected to be ~3:1 according to Rob
 
-    // Minimum valid distance to the target (in meters) used to clamp Limelight-derived values.
-    public static final double MINIMUM_DISTANCE = 90 * 0.0254; // 90 inches to meters
+    /** Minimum valid distance to the target (in meters) used to clamp Limelight-derived values. */
+    public static final double MINIMUM_DISTANCE = Units.inchesToMeters(90); // 90 inches to meters
 
-    // Maximum valid distance to the target (in meters) used to clamp Limelight-derived values.
-    public static final double MAXIMUM_DISTANCE = 250 * 0.0254; // 250 inches to meters
+    /** Maximum valid distance to the target (in meters) used to clamp Limelight-derived values. */
+    public static final double MAXIMUM_DISTANCE = Units.inchesToMeters(250); // 250 inches to meters
 
-    // Gravity constant (m/s^2) used for projectile motion calculations.
+    /** Gravity constant (m/s^2) used for projectile motion calculations. */
     public static final double GRAVITY_CONSTANT = 9.81;
 
-    // Physical shooter wheel radius in meters (used as the baseline before efficiency scaling).
-    public static final double SHOOTER_WHEEL_RADIUS = 2.25 * 0.0254; // 2.25 inches to meters
+    /** Physical shooter wheel radius in meters (used as the baseline before efficiency scaling). */
+    public static final double SHOOTER_WHEEL_RADIUS = Units.inchesToMeters(2.25); // 2.25 inches to meters
 
-    // Empirical efficiency factor to account for real-world losses (slip, compression, drag, etc.).
-    // Tuned experimentally; a value in (0, 1] scales the effective wheel radius.
-    public static final double DEFAULT_RADIUS_EFFICIENCY = 0.85;
-
-    /*
-     * Tuning guide for RADIUS_DASHBOARD_KEY:
+    /** 
+     * Key for tuning the effective radius efficiency on the dashboard. This allows live adjustments to
+     * account for real-world losses without changing the physical constants. The value should be in the 
+     * range (0, 1], where 1 means no losses and values closer to 0 represent more significant losses. 
+     * Tuning this value effectively scales the computed wheel radius used in velocity calculations, 
+     * allowing you to empirically match the theoretical projectile motion to actual shot performance.
+     *
+     * TUNING GUIDE:
      * 1) Set up the robot at a known, repeatable distance inside MINIMUM/MAXIMUM range.
      * 2) Command a shot and observe whether shots fall short or overshoot.
      * 3) Increase the value to raise the computed RPS (shots go farther).
      * 4) Decrease the value to lower the computed RPS (shots go shorter).
      * 5) Re-test at a few distances to confirm the curve stays consistent.
      */
-    // SmartDashboard key used to live-tune radius efficiency without redeploying.
-    public static final String RADIUS_DASHBOARD_KEY = "Shooter/RadiusEfficiency";
+    public static final double DEFAULT_RADIUS_EFFICIENCY = 0.85;
 
-    // Fixed shooter launch angle in radians (used in the projectile motion calculation).
+    /** Fixed shooter launch angle in radians (used in the projectile motion calculation). */
     public static final double SHOOTER_ANGLE = Math.toRadians(45.0); // Convert 45 degrees to radians
 
-    // Height of the shooter exit point above the floor, in meters.
-    public static final double SHOOTER_HEIGHT = 27 * 0.0254; // 27 inches to meters
+    /** Height of the shooter exit point above the floor, in meters. */
+    public static final double SHOOTER_HEIGHT = Units.inchesToMeters(27); // 27 inches to meters
 
-    // Height of the target center above the floor, in meters.
-    public static final double GOAL_HEIGHT = 72 * 0.0254; // 72 inches to meters
+    /** Height of the target center above the floor, in meters. */
+    public static final double GOAL_HEIGHT = Units.inchesToMeters(72); // 72 inches to meters
 
-    // Vertical offset between the target and the shooter exit point (meters).
+    /** Vertical offset between the target and the shooter exit point (meters). */
     public static final double HEIGHT_DIFFERENCE = GOAL_HEIGHT - SHOOTER_HEIGHT;
   }
-
 
   /* ================= Climb ================= */
 
@@ -167,11 +164,10 @@ public final class Constants
 
     /** Forward Soft Limit (Extension Limit). */
     public static final double SOFT_LIMIT_FORWARD = CLIMB_EXTENDED_ROTATIONS;
-    
+
     /** Reverse Soft Limit (Retraction Limit). */
     public static final double SOFT_LIMIT_REVERSE = CLIMB_RETRACTED_ROTATIONS;
   }
-
 
   /* ================= Hopper ================= */
 
@@ -186,6 +182,24 @@ public final class Constants
     public static final int HOPPER_MOTOR_ID2 = 0;
   }
 
+  /* ================= Object Recognition ================= */
+
+  /** Constants for the ObjectRecognition subsystem. */
+  public static final class ObjectRecognitionConstants {
+    private ObjectRecognitionConstants() {} // Prevent instantiation
+
+    /** The name of the limelight used for object detection. */
+    public static final String LIMELIGHT_NAME = "limelight";
+
+    /** Pipeline index for standard AprilTag processing. */
+    public static final int APRIL_TAG_PIPELINE_INDEX = 0;
+
+    /** Pipeline index for neural network object detection. */
+    public static final int OBJECT_DETECTION_PIPELINE_INDEX = 1;
+
+    /** Camera mounting height in meters. Measure the distance from the floor to the center of the camera lens. */
+    public static final double CAMERA_HEIGHT_METERS = 0.5; // Placeholder: Replace with actual height
+  }
 
   /* ================= Drivebase ================= */
 
@@ -196,7 +210,6 @@ public final class Constants
     /** Time to hold wheel lock after disable in seconds. */
     public static final double WHEEL_LOCK_TIME = 10.0;
   }
-
 
   /* ================= Operator Controls ================= */
 
@@ -209,14 +222,13 @@ public final class Constants
 
     /** Deadband for the left Y axis (forward/back). */
     public static final double LEFT_Y_DEADBAND = 0.1;
-    
+
     /** Deadband for the right X axis (rotation). */
     public static final double RIGHT_X_DEADBAND = 0.1;
 
     /** Scalar applied to turning input for driver feel. */
     public static final double TURN_CONSTANT = 6.0;
   }
-
 
   /* ================= Elevator ================= */
 
@@ -226,21 +238,20 @@ public final class Constants
 
     /** Spark MAX configuration for the elevator motor controller. */
     public static final SparkMaxConfig ELEVATOR_MOTOR_CONFIG = new SparkMaxConfig();
-                
+
     static {
       // Basic motor behavior: brake when idle and enforce a current limit.
       ELEVATOR_MOTOR_CONFIG
-        .idleMode(IdleMode.kBrake)
-        .smartCurrentLimit(60);
+          .idleMode(IdleMode.kBrake)
+          .smartCurrentLimit(60);
 
       // Closed-loop settings for position/velocity control (tune as needed).
       ELEVATOR_MOTOR_CONFIG.closedLoop
-        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        .pid(0.1, 0.0, 0.0)
-        .outputRange(-1, 1);
+          .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+          .pid(0.1, 0.0, 0.0)
+          .outputRange(-1, 1);
     }
   }
-
 
   /* ================= Turret ================= */
 
