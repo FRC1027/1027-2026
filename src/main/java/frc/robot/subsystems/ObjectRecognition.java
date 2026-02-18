@@ -96,8 +96,7 @@ public class ObjectRecognition extends SubsystemBase {
                 .andThen(new InstantCommand(this::updateInputs)) // Update state
                 .andThen(new InstantCommand(() -> {
                     if (currentState.hasTarget) {
-                        System.out.println(currentState.className + " detected at "
-                                + String.format("%.2f", currentState.distance) + "m");
+                        System.out.println(currentState.className + " detected " + currentState.distance + "m away");
                     } else {
                         System.out.println("No object detected");
                     }

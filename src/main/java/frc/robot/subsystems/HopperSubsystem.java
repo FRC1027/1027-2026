@@ -7,6 +7,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotContainer;
@@ -23,11 +24,17 @@ public class HopperSubsystem extends SubsystemBase {
     // Secondary hopper motor controller (follower).
     private final TalonFX hopperMotor2;
 
+    // Boolean to indicate whether the hopper is currently enlarged, for use in state management.
+    private final boolean hopperEnlarged;
+
     /**
      * Creates the hopper subsystem, configures both TalonFX motors, and
      * sets up the follower relationship for the second motor.
      */
     public HopperSubsystem() {
+        // Default to not enlarged state on initialization; the hopper starts in its normal configuration.
+        hopperEnlarged = false;
+
         // Initialize hopper motors using configured CAN IDs.
         hopperMotor1 = new TalonFX(HopperConstants.HOPPER_MOTOR_ID1);
         hopperMotor2 = new TalonFX(HopperConstants.HOPPER_MOTOR_ID2);
@@ -62,6 +69,16 @@ public class HopperSubsystem extends SubsystemBase {
                 setHopperSpeed(-0.5); // Set speed to -50% when left bumper is pressed
             } else {
                 setHopperSpeed(0.0); // Stop the hopper motor when neither bumper is pressed
+            }
+        });
+    }
+
+    public Command hopperEnlarger2000Command() {
+        return new InstantCommand(() -> {
+            if (!hopperEnlarged) {
+                // Time how long it takes to fully extend the hopper with a known speed
+            } else {
+                
             }
         });
     }

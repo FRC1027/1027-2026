@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.RobotProperties;
+import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
 
 /**
@@ -59,6 +60,9 @@ public class DriveTowardTagCommand extends Command {
      */
     public DriveTowardTagCommand(SwerveSubsystem drivebase) {
         this(drivebase, 2.0, 2.0);
+
+        // Require the drivebase so no other drive commands run at the same time
+        addRequirements(drivebase);
     }
 
     @Override
@@ -73,7 +77,7 @@ public class DriveTowardTagCommand extends Command {
         // Runs repeatedly while the command is active (approx. every 20ms)
 
         // 1. Check if we are tracking the correct tag ID
-        double fid = LimelightHelpers.getFiducialID("limelight");
+        double fid = LimelightHelpers.getFiducialID(ObjectRecognitionConstants.LIMELIGHT_NAME);
         if (Double.isNaN(fid) || fid < 0.0) {
             SmartDashboard.putString("LL Status", "Tag ID not found");
             stopRobot();
@@ -81,7 +85,7 @@ public class DriveTowardTagCommand extends Command {
         }
 
         // 2. Get the "tv" (Target Valid) value from Limelight NetworkTables
-        NetworkTable limelight = NetworkTableInstance.getDefault().getTable("limelight");
+        NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
         double tv = limelight.getEntry("tv").getDouble(0.0);
 
         if (tv < 1.0) {

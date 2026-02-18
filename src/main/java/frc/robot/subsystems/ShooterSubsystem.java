@@ -18,7 +18,6 @@ import frc.robot.RobotContainer;
 import frc.robot.commands.DriveTowardTagCommand;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.ShooterConstants;
-import frc.robot.util.Constants.RobotProperties;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.Utils;
