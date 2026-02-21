@@ -3,8 +3,6 @@ package frc.robot.commands.auto;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
@@ -12,7 +10,6 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import frc.robot.subsystems.ShooterSubsystem;
-import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.LimelightHelpers;
 
@@ -38,7 +35,7 @@ import frc.robot.util.LimelightHelpers;
  */
 public class AutoShootAtTag4 extends SequentialCommandGroup {
 
-    public AutoShootAtTag4(SwerveSubsystem drivebase, TurretSubsystem turret, ShooterSubsystem shooter) {
+    public AutoShootAtTag4(SwerveSubsystem drivebase, ShooterSubsystem shooter) {
         addCommands(
 
             // Step 1: Drive forward a short distance (~1 ft)
@@ -127,19 +124,6 @@ public class AutoShootAtTag4 extends SequentialCommandGroup {
 
             // Step 3: Stop drivebase fully
             Commands.runOnce(() -> drivebase.drive(new Translation2d(0.0, 0.0), 0.0, true), drivebase),
-
-            // Step 4a: Actively adjust turret using Limelight
-            Commands.run(() -> {
-                if (LimelightHelpers.getFiducialID("limelight") == 4) {
-                    turret.trackTargetWithLimelight();
-                }
-            }, turret).withTimeout(2.0),
-
-            // Step 4b: Block until turret centered (|tx| < 1°) or 2s timeout
-            new WaitUntilCommand(() ->
-                LimelightHelpers.getFiducialID("limelight") == 4 &&
-                Math.abs(LimelightHelpers.getTX("limelight")) < 1.0
-            ).withTimeout(2.0),
 
             // Small pause to stabilize aim
             new WaitCommand(0.3),

@@ -45,7 +45,7 @@ public final class Utils {
     }
 
     double tx = pose[0]; // Horizontal offset (left/right) in meters.
-    double ty = pose[1]; // Vertical offset (up/down) in meters (unused for distance here).
+    //double ty = pose[1]; // Vertical offset (up/down) in meters.
     double tz = pose[2]; // Forward distance (depth) in meters.
 
     // Compute planar distance from camera to tag using X/Z components.

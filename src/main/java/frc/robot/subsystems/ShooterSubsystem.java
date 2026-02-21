@@ -14,8 +14,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 import frc.robot.RobotContainer;
-import frc.robot.commands.DriveTowardTagCommand;
+import frc.robot.commands.DriveTowardTargetCommand;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.ShooterConstants;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
@@ -146,7 +147,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
             if (fid == 4 || fid == 9 || fid == 10 || fid == 25 || fid == 26) {
                 // Align with the tag at a fixed rotation speed, then run the shooter command.
-                return new DriveTowardTagCommand(drivebase, 0.0, 2.0)
+                return new DriveTowardTargetCommand(drivebase, 0.0, 2.0)
                 .andThen(shoot());
             }
             // If no valid tag is seen, return a "do-nothing" command to avoid unintended motion.

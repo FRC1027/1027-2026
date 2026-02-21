@@ -6,6 +6,7 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -21,16 +22,15 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.DriveTowardTagCommand;
-import frc.robot.subsystems.ObjectRecognition;
+
+import frc.robot.commands.auto.AutoShootAtTag4;
+import frc.robot.commands.DriveTowardTargetCommand;
 import frc.robot.subsystems.ShooterSubsystem;
-import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.OperatorConstants;
 
 import java.io.File;
 import swervelib.SwerveInputStream;
-import frc.robot.commands.auto.AutoShootAtTag4;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -47,23 +47,18 @@ public class RobotContainer
   private final SwerveSubsystem drivebase = new SwerveSubsystem(
       new File(Filesystem.getDeployDirectory(), "swerve")
   );
-  
-  // Defining the TurretSubsystem
-  private final TurretSubsystem m_turret = new TurretSubsystem();
 
   // Defining the ShooterSubsystem
   private final ShooterSubsystem m_shooter = new ShooterSubsystem();
 
   // Defining DriveTowardTagCommand (Drive Mode) ** Uses AprilTag detection **
-  private final DriveTowardTagCommand m_DriveTowardTagCommand = new DriveTowardTagCommand(drivebase, true);
+  private final DriveTowardTargetCommand m_DriveTowardTagCommand = new DriveTowardTargetCommand(drivebase, true);
 
   // Defining DriveTowardGamePieceCommand (Drive Mode) ** Uses object detection **
-  private final DriveTowardTagCommand m_DriveTowardGamePieceCommand = new DriveTowardTagCommand(drivebase, false);
+  private final DriveTowardTargetCommand m_DriveTowardGamePieceCommand = new DriveTowardTargetCommand(drivebase, false);
 
   // Defining AlignTagCommand (Align Only Mode - MaxSpeed = 0) ** Only uses AprilTag detection, not object detection **
-  private final DriveTowardTagCommand m_AlignTagCommand = new DriveTowardTagCommand(drivebase, 0.0, 2.0);
-
-  private final ObjectRecognition m_ObjectRecognition = new ObjectRecognition();
+  private final DriveTowardTargetCommand m_AlignTagCommand = new DriveTowardTargetCommand(drivebase, 0.0, 2.0);
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
@@ -145,7 +140,7 @@ public class RobotContainer
      */
 
     // Add other auotonomous paths here so they can appear on the dashboard
-    m_chooser.addOption("Shoot At Tag 4", new AutoShootAtTag4(drivebase, m_turret, m_shooter));
+    m_chooser.addOption("Shoot At Tag 4", new AutoShootAtTag4(drivebase, m_shooter));
       
     // Default Auto: Drive forward ~1 foot, then stop
     m_chooser.setDefaultOption("Drive Forward 1ft (Default)",
@@ -172,10 +167,6 @@ public class RobotContainer
   {
     Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
     Command driveFieldOrientedDirectAngleKeyboard = drivebase.driveFieldOriented(driveDirectAngleKeyboard);
-    
-    m_turret.setDefaultCommand(
-      m_turret.run(() -> m_turret.periodic()) // Calls periodic method in TurretSubsystem every loop
-    );
 
     // Controls a two second intake and outake of the shooter mechanism
     // driverXbox.y().onTrue(m_shooter.TimedOuttake());
@@ -184,10 +175,6 @@ public class RobotContainer
     // Controls the drive DriveTowardTagCommand while b button is held down
     driverXbox.b().whileTrue(m_DriveTowardTagCommand);
     driverXbox.x().whileTrue(m_AlignTagCommand);
-
-    // Control the object recognition subsystem toggles
-    driverXbox.y().onTrue(m_ObjectRecognition.recognizeObjectsCommand());
-
 
     if (RobotBase.isSimulation())
     {
@@ -256,10 +243,6 @@ public class RobotContainer
   public void setMotorBrake(boolean brake)
   {
     drivebase.setMotorBrake(brake);
-  }
-
-  public TurretSubsystem getTurret() {
-    return m_turret;
   }
 }
 //test

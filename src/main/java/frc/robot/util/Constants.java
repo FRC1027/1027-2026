@@ -7,6 +7,7 @@ package frc.robot.util;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import swervelib.math.Matter;
@@ -22,7 +23,6 @@ public final class Constants {
 
   /* ================= Robot Physical Properties ================= */
 
-  /** Robot geometry and physical characterization constants. */
   public static final class RobotProperties {
     private RobotProperties() {} // Prevent instantiation
 
@@ -46,7 +46,6 @@ public final class Constants {
 
   /* ================= Shooter ================= */
 
-  /** Shooter subsystem constants. */
   public static final class ShooterConstants {
     private ShooterConstants() {} // Prevent instantiation
 
@@ -171,7 +170,6 @@ public final class Constants {
 
   /* ================= Hopper ================= */
 
-  /** Hopper subsystem constants. */
   public static final class HopperConstants {
     private HopperConstants() {} // Prevent instantiation
 
@@ -184,7 +182,6 @@ public final class Constants {
 
   /* ================= Object Recognition ================= */
 
-  /** Constants for the ObjectRecognition subsystem. */
   public static final class ObjectRecognitionConstants {
     private ObjectRecognitionConstants() {} // Prevent instantiation
 
@@ -203,7 +200,6 @@ public final class Constants {
 
   /* ================= Drivebase ================= */
 
-  /** Drivebase-specific constants. */
   public static final class DrivebaseConstants {
     private DrivebaseConstants() {} // Prevent instantiation
 
@@ -213,7 +209,6 @@ public final class Constants {
 
   /* ================= Operator Controls ================= */
 
-  /** Driver and operator input constants. */
   public static class OperatorConstants {
     private OperatorConstants() {} // Prevent instantiation
 
@@ -232,7 +227,6 @@ public final class Constants {
 
   /* ================= Elevator ================= */
 
-  /** Elevator subsystem constants and motor controller configuration. */
   public static final class ElevatorConstants {
     private ElevatorConstants() {} // Prevent instantiation
 
@@ -255,7 +249,6 @@ public final class Constants {
 
   /* ================= Turret ================= */
 
-  /** Turret subsystem constants. */
   public static final class TurretConstants {
     private TurretConstants() {} // Prevent instantiation
 
