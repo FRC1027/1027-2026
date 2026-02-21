@@ -54,10 +54,13 @@ public class RobotContainer
   // Defining the ShooterSubsystem
   private final ShooterSubsystem m_shooter = new ShooterSubsystem();
 
-  // Defining DriveTowardTagCommand (Drive Mode)
-  private final DriveTowardTagCommand m_DriveTowardTagCommand = new DriveTowardTagCommand(drivebase);
+  // Defining DriveTowardTagCommand (Drive Mode) ** Uses AprilTag detection **
+  private final DriveTowardTagCommand m_DriveTowardTagCommand = new DriveTowardTagCommand(drivebase, true);
 
-  // Defining AlignTagCommand (Align Only Mode - MaxSpeed = 0)
+  // Defining DriveTowardGamePieceCommand (Drive Mode) ** Uses object detection **
+  private final DriveTowardTagCommand m_DriveTowardGamePieceCommand = new DriveTowardTagCommand(drivebase, false);
+
+  // Defining AlignTagCommand (Align Only Mode - MaxSpeed = 0) ** Only uses AprilTag detection, not object detection **
   private final DriveTowardTagCommand m_AlignTagCommand = new DriveTowardTagCommand(drivebase, 0.0, 2.0);
 
   private final ObjectRecognition m_ObjectRecognition = new ObjectRecognition();

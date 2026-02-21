@@ -77,8 +77,9 @@ public class HopperSubsystem extends SubsystemBase {
         return new InstantCommand(() -> {
             if (!hopperEnlarged) {
                 // Time how long it takes to fully extend the hopper with a known speed
+                // Put enlarge code here
             } else {
-                
+                // Put retract code here
             }
         });
     }
