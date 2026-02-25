@@ -24,8 +24,8 @@ public class HopperSubsystem extends SubsystemBase {
     // Secondary hopper motor controller (follower).
     private final TalonFX hopperMotor2;
 
-    // Boolean to indicate whether the hopper is currently enlarged, for use in state management.
-    private final boolean hopperEnlarged;
+    // Boolean to indicate whether the hopper is currently expanded, for use in state management.
+    private boolean hopperEnlarged;
 
     /**
      * Creates the hopper subsystem, configures both TalonFX motors, and
@@ -74,14 +74,17 @@ public class HopperSubsystem extends SubsystemBase {
     }
 
     public Command hopperEnlarger2000Command() {
-        return new InstantCommand(() -> {
-            if (!hopperEnlarged) {
-                // Time how long it takes to fully extend the hopper with a known speed
-                // Put enlarge code here
-            } else {
-                // Put retract code here
-            }
-        });
+        if (!hopperEnlarged) {
+            // Example: run the hopper at 10% speed for 2 seconds to fully enlarge (tuning is required)
+            return run(() -> setHopperSpeed(0.1))
+                .withTimeout(2.0) // Time how long it takes to fully extend the hopper with a known speed
+                .andThen(runOnce(() -> setHopperSpeed(0.0)));
+        } else {
+            // Example: run the hopper at 10% speed for 2 seconds to fully enlarge (tuning is required)
+            return run(() -> setHopperSpeed(-0.1))
+                .withTimeout(2.0) // Time how long it takes to fully retract the hopper with a known speed
+                .andThen(runOnce(() -> setHopperSpeed(0.0)));
+        }
     }
 
     /**

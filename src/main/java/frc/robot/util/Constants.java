@@ -27,7 +27,7 @@ public final class Constants {
     private RobotProperties() {} // Prevent instantiation
 
     /** Robot mass in kilograms (measured weight minus bumpers). */
-    public static final double ROBOT_MASS = (148 - 20.3) * 0.453592; // lbs to kg
+    public static final double ROBOT_MASS = Units.lbsToKilograms(148 - 20.3); // lbs to kg
 
     /** Center of mass used for swerve dynamics calculations. */
     public static final Matter CHASSIS = new Matter(
@@ -211,12 +211,6 @@ public final class Constants {
 
     /** Global joystick deadband to prevent stick drift. */
     public static final double DEADBAND = 0.1;
-
-    /** Deadband for the left Y axis (forward/back). */
-    public static final double LEFT_Y_DEADBAND = 0.1;
-
-    /** Deadband for the right X axis (rotation). */
-    public static final double RIGHT_X_DEADBAND = 0.1;
 
     /** Scalar applied to turning input for driver feel. */
     public static final double TURN_CONSTANT = 6.0;
