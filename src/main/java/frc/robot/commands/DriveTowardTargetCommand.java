@@ -62,7 +62,7 @@ public class DriveTowardTargetCommand extends Command {
     private boolean detectAprilTag;
 
     // Desired stopping distance from the target (from bumper to tag) in meters. The robot will stop when it reaches this distance.
-    private final double STOP_DISTANCE = 0.5;
+    private double STOP_DISTANCE = 0.5;
 
     // Current forward and rotation speeds
     private double forwardSpeed = 0.0;
@@ -101,6 +101,12 @@ public class DriveTowardTargetCommand extends Command {
         this.maxSpeed = 2.0;
         this.maxRotation = 2.0;
         this.detectAprilTag = detectAprilTag;
+
+        if (!detectAprilTag) {
+            // If using object detection, we want to use a closer stop distance since we want to be right on top of the game piece to pick it up.
+            // We can adjust this as needed based on testing.
+            STOP_DISTANCE = 0.1; // In meters
+        }
 
         // Require the drivebase so no other drive commands run at the same time
         addRequirements(drivebase);

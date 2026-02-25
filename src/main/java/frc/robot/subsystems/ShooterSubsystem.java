@@ -143,7 +143,7 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public Command shootAlign(SwerveSubsystem drivebase) {
         return Commands.defer(() -> {
-            double fid = LimelightHelpers.getFiducialID("limelight");
+            double fid = LimelightHelpers.getFiducialID(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
             if (fid == 4 || fid == 9 || fid == 10 || fid == 25 || fid == 26) {
                 // Align with the tag at a fixed rotation speed, then run the shooter command.

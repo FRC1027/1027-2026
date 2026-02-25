@@ -193,9 +193,6 @@ public final class Constants {
 
     /** Pipeline index for neural network object detection. */
     public static final int OBJECT_DETECTION_PIPELINE_INDEX = 1;
-
-    /** Camera mounting height in meters. Measure the distance from the floor to the center of the camera lens. */
-    public static final double CAMERA_HEIGHT_METERS = 0.5; // Placeholder: Replace with actual height
   }
 
   /* ================= Drivebase ================= */
