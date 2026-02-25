@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.RobotContainer;
 import frc.robot.commands.DriveTowardTargetCommand;
+import frc.robot.commands.LockWheelsCommand;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.ShooterConstants;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
@@ -146,9 +147,11 @@ public class ShooterSubsystem extends SubsystemBase {
             double fid = LimelightHelpers.getFiducialID(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
             if (fid == 4 || fid == 9 || fid == 10 || fid == 25 || fid == 26) {
-                // Align with the tag at a fixed rotation speed, then run the shooter command.
-                return new DriveTowardTargetCommand(drivebase, 0.0, 2.0)
-                .andThen(shoot());
+                return new DriveTowardTargetCommand(drivebase, 0.0, 2.0) // Aligns to the target tag using only rotational movement (max speed = 0)
+                        // Once the alignment command finishes, run the shoot command while also locking the wheels to prevent movement during shooting.
+                        .andThen(Commands.deadline(
+                                shoot(), // End the command when the shoot command finishes (which is when the driver releases the trigger)
+                                new LockWheelsCommand(drivebase)));
             }
             // If no valid tag is seen, return a "do-nothing" command to avoid unintended motion.
             return Commands.none();
