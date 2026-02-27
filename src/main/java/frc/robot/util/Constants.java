@@ -195,6 +195,12 @@ public final class Constants {
     public static final int OBJECT_DETECTION_PIPELINE_INDEX = 1;
   }
 
+  public static final class IntakeConstants {
+    private IntakeConstants() {} // Prevent instantiation
+
+    public static final int INTAKE_MOTOR_ID = 0;
+  }
+
   /* ================= Drivebase ================= */
 
   public static final class DrivebaseConstants {

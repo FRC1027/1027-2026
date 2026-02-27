@@ -7,7 +7,6 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotContainer;
@@ -64,15 +63,20 @@ public class HopperSubsystem extends SubsystemBase {
             Trigger leftBumper = RobotContainer.driverXbox.leftBumper();
 
             if (rightBumper.getAsBoolean()) {
-                setHopperSpeed(0.5); // Set speed to 50% when right bumper is pressed
+                setHopperSpeed(0.1027); // Set speed to 50% when right bumper is pressed
             } else if (leftBumper.getAsBoolean()) {
-                setHopperSpeed(-0.5); // Set speed to -50% when left bumper is pressed
+                setHopperSpeed(-0.1027); // Set speed to -50% when left bumper is pressed
             } else {
                 setHopperSpeed(0.0); // Stop the hopper motor when neither bumper is pressed
             }
         });
     }
 
+    /**
+     * Enlarges or retracts the hopper based on its current state. If the hopper is not enlarged, 
+     * it will run the motors to enlarge it; if it is already enlarged, it will run the motors in 
+     * reverse to retract it.
+     */
     public Command hopperEnlarger2000Command() {
         if (!hopperEnlarged) {
             // Example: run the hopper at 10% speed for 2 seconds to fully enlarge (tuning is required)
@@ -94,5 +98,15 @@ public class HopperSubsystem extends SubsystemBase {
      */
     public void setHopperSpeed(double speed) {
         hopperMotor1.set(speed); // Set the speed of the hopper motor
+    }
+
+    /**
+     * Returns the current state of the hopper (enlarged or not). This is used for state management in commands and
+     * other subsystems.
+     * 
+     * @return true if the hopper is enlarged, false otherwise
+     */
+    public boolean getHopperEnlarged() {
+        return hopperEnlarged;
     }
 }
