@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.function.BooleanSupplier;
+
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -14,11 +16,11 @@ import frc.robot.util.Constants.IntakeConstants;
 import frc.robot.util.Utils;
 
 public class IntakeSubsystem extends SubsystemBase {
-    // Reference to the hopper subsystem for potential coordination between intake and hopper operations.
-    private HopperSubsystem hopperSubsystem = new HopperSubsystem();
+    // Boolean supplier to check if the hopper is enlarged, allowing for coordinated control between subsystems.
+    private final BooleanSupplier isHopperEnlarged;
 
     // Intake motor
-    private SparkMax intakeMotor;
+    private final SparkMax intakeMotor;
 
     // Shared motor configuration for all intake instances
     public static final SparkMaxConfig intakeConfig = new SparkMaxConfig();
@@ -30,7 +32,10 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     @SuppressWarnings("removal") // Suppress warnings about deprecated ResetMode and PersistMode usage in SparkMax configuration
-    public IntakeSubsystem() {
+    public IntakeSubsystem(BooleanSupplier isHopperEnlarged) {
+        // Store the BooleanSupplier for checking hopper state, enabling dynamic response to hopper enlargement.
+        this.isHopperEnlarged = isHopperEnlarged;
+
         // Initialize the intake motor using configured CAN ID.
         intakeMotor = new SparkMax(IntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
 
@@ -46,17 +51,22 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public Command manualIntakeCommand() {
         return run(() -> {
-            double rightTrigger = Utils.deadbandReturn(RobotContainer.mechXbox.getRightTriggerAxis(), 0.1);
-            double leftTrigger = -Utils.deadbandReturn(RobotContainer.mechXbox.getLeftTriggerAxis(), 0.1);
+            if (isHopperEnlarged.getAsBoolean()) {
+                double rightTrigger = Utils.deadbandReturn(RobotContainer.mechXbox.getRightTriggerAxis(), 0.1);
+                double leftTrigger = -Utils.deadbandReturn(RobotContainer.mechXbox.getLeftTriggerAxis(), 0.1);
 
-            if (rightTrigger > 0.0){
-                // Scale trigger input after applying deadband for smooth manual intake control.
-                setIntakeSpeed(rightTrigger / 4);
-            } else if (leftTrigger < 0.0){
-                // Scale trigger input after applying deadband for smooth manual outake control.
-                setIntakeSpeed(leftTrigger / 4);
+                if (rightTrigger > 0.0){
+                    // Scale trigger input after applying deadband for smooth manual intake control.
+                    setIntakeSpeed(rightTrigger / 4);
+                } else if (leftTrigger < 0.0){
+                    // Scale trigger input after applying deadband for smooth manual outake control.
+                    setIntakeSpeed(leftTrigger / 4);
+                } else {
+                    // No trigger input: stop the motor.
+                    setIntakeSpeed(0.0);
+                }
             } else {
-                // No trigger input: stop the motor.
+                // If the hopper is not enlarged, stop the intake motor regardless of trigger input to prevent unintended behavior.
                 setIntakeSpeed(0.0);
             }
         });
@@ -69,7 +79,7 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public Command continuousIntakeCommand() { //
         return run(() -> {
-            if (hopperSubsystem.getHopperEnlarged()) {
+            if (isHopperEnlarged.getAsBoolean()) {
                 setIntakeSpeed(0.5); // Run intake at 50% speed when hopper is enlarged
             } else {
                 setIntakeSpeed(0.0); // Stop intake when hopper is not enlarged

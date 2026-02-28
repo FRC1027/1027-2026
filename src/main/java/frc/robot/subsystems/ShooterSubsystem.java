@@ -24,34 +24,15 @@ import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.Utils;
 
-// temp imports
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkMaxConfig;
-
 public class ShooterSubsystem extends SubsystemBase {
     // Limelight NetworkTable used to fetch target 3D pose data.
     private NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
     // Primary shooter motor controller (leader).
-    //private TalonFX shooterMotor1;
+    private final TalonFX shooterMotor1;
 
     // Secondary shooter motor controller (follower).
-    //private TalonFX shooterMotor2;
-
-    private SparkMax shooterMotor1;
-    private SparkMax shooterMotor2;
-
-    public static final SparkMaxConfig shooterConfig = new SparkMaxConfig();
-
-    static {
-        shooterConfig
-            .idleMode(IdleMode.kBrake)
-            .smartCurrentLimit(50);
-    }
+    private final TalonFX shooterMotor2;
 
     /**
      * Creates the shooter subsystem, configures TalonFX control gains, and
@@ -59,27 +40,21 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public ShooterSubsystem() {
         // Initialize the shooter motors using configured CAN IDs.
-        //shooterMotor1 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID1);
-        //shooterMotor2 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID2);
-
-        shooterMotor1 = new SparkMax(ShooterConstants.SHOOTER_MOTOR_ID1, MotorType.kBrushless);
-        shooterMotor2 = new SparkMax(ShooterConstants.SHOOTER_MOTOR_ID1, MotorType.kBrushless);
+        shooterMotor1 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID1);
+        shooterMotor2 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID2);
 
         // Configure velocity-loop gains and neutral mode for consistent flywheel behavior.
-        // TalonFXConfiguration config = new TalonFXConfiguration();
-        // config.Slot0.kP = 0.15; // Proportional gain for velocity control (tuning may be required).
-        // config.Slot0.kI = 0.0;
-        // config.Slot0.kD = 0.0;
-        // config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        TalonFXConfiguration config = new TalonFXConfiguration();
+        config.Slot0.kP = 0.15; // Proportional gain for velocity control (tuning may be required).
+        config.Slot0.kI = 0.0;
+        config.Slot0.kD = 0.0;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         
-        //shooterMotor1.getConfigurator().apply(config);
-        //shooterMotor2.getConfigurator().apply(config);
-
-        shooterMotor1.configure(shooterConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        shooterMotor2.configure(shooterConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        shooterMotor1.getConfigurator().apply(config);
+        shooterMotor2.getConfigurator().apply(config);
 
         // Set the second motor to follow the first motor with opposite direction to match motor layout.
-        //shooterMotor2.setControl(new Follower(ShooterConstants.SHOOTER_MOTOR_ID1, MotorAlignmentValue.Opposed)); // Check if it should be Opposed or Aligned
+        shooterMotor2.setControl(new Follower(ShooterConstants.SHOOTER_MOTOR_ID1, MotorAlignmentValue.Opposed)); // Check if it should be Opposed or Aligned
 
         // Publish the radius efficiency to SmartDashboard so it can be tuned live.
         SmartDashboard.putNumber("Shooter/RadiusEfficiency", ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
@@ -108,8 +83,7 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public double calculateWheelRPS() {
         // Calculate the distance from the bumper to the target tag using Limelight data.
-        //double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight);
-        double bumperToTagDistance = 5; //meters
+        double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight);
 
         // Return NaN if the distance data is missing or invalid.
         if (!Double.isFinite(bumperToTagDistance)) {
@@ -192,10 +166,7 @@ public class ShooterSubsystem extends SubsystemBase {
     public Command shoot() {
         return runEnd(
             this::setShooterRPS,
-            () -> {//shooterMotor1.setControl(new VelocityVoltage(0))
-            shooterMotor1.setVoltage(0);    //REMOVE BRACKETS
-            shooterMotor2.setVoltage(0);
-            }
+            () -> shooterMotor1.setControl(new VelocityVoltage(0))
         );
     }
 
@@ -208,10 +179,7 @@ public class ShooterSubsystem extends SubsystemBase {
         return run(() -> {
             setShooterSpeed(-ShooterConstants.SHOOTER_POWER); // Reverse shooter for outtake
         }).withTimeout(2.0) // Run for 2 seconds
-          .andThen(runOnce(() -> {//shooterMotor1.setControl(new VelocityVoltage(0))
-                                    shooterMotor1.setVoltage(0);    //REMOVE BRACKETS
-                                    shooterMotor2.setVoltage(0);
-                                }
+          .andThen(runOnce(() -> shooterMotor1.setControl(new VelocityVoltage(0))
           )); 
     }
 
@@ -223,17 +191,13 @@ public class ShooterSubsystem extends SubsystemBase {
 
         // If the calculated RPS is not valid, stop the motor to avoid unintentional behavior.
         if (!Double.isFinite(wheelRPS)) {
-            //shooterMotor1.setControl(new VelocityVoltage(0));
-            shooterMotor1.setVoltage(0);
-            shooterMotor2.setVoltage(0);
+            shooterMotor1.setControl(new VelocityVoltage(0));
             return;
         }
 
         // Convert wheel RPS to motor RPS using the configured gear ratio.
         double motorRPS = wheelRPS * ShooterConstants.GEAR_RATIO;
-        //shooterMotor1.setControl(new VelocityVoltage(motorRPS));
-        shooterMotor1.setVoltage(motorRPS);
-        shooterMotor2.setVoltage(motorRPS);
+        shooterMotor1.setControl(new VelocityVoltage(motorRPS));
     }
 
     /**

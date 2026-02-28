@@ -62,7 +62,7 @@ public final class Constants {
     public static final double GEAR_RATIO = 1.0; // Expected to be ~3:1 according to Rob
 
     /** Minimum valid distance to the target (in meters) used to clamp Limelight-derived values. */
-    public static final double MINIMUM_DISTANCE = Units.inchesToMeters(90); // 90 inches to meters
+    public static final double MINIMUM_DISTANCE = Units.inchesToMeters(31.5); // 90 inches to meters
 
     /** Maximum valid distance to the target (in meters) used to clamp Limelight-derived values. */
     public static final double MAXIMUM_DISTANCE = Units.inchesToMeters(250); // 250 inches to meters
@@ -90,7 +90,7 @@ public final class Constants {
     public static final double DEFAULT_RADIUS_EFFICIENCY = 0.85;
 
     /** Fixed shooter launch angle in radians (used in the projectile motion calculation). */
-    public static final double SHOOTER_ANGLE = Math.toRadians(45.0); // Convert 45 degrees to radians
+    public static final double SHOOTER_ANGLE = Math.toRadians(55.0); // Convert 55 degrees to radians
 
     /** Height of the shooter exit point above the floor, in meters. */
     public static final double SHOOTER_HEIGHT = Units.inchesToMeters(27); // 27 inches to meters
@@ -180,6 +180,14 @@ public final class Constants {
     public static final int HOPPER_MOTOR_ID2 = 0;
   }
 
+  /* ================= Intake ================= */
+
+  public static final class IntakeConstants {
+    private IntakeConstants() {} // Prevent instantiation
+
+    public static final int INTAKE_MOTOR_ID = 0;
+  }
+
   /* ================= Object Recognition ================= */
 
   public static final class ObjectRecognitionConstants {
@@ -193,12 +201,6 @@ public final class Constants {
 
     /** Pipeline index for neural network object detection. */
     public static final int OBJECT_DETECTION_PIPELINE_INDEX = 1;
-  }
-
-  public static final class IntakeConstants {
-    private IntakeConstants() {} // Prevent instantiation
-
-    public static final int INTAKE_MOTOR_ID = 0;
   }
 
   /* ================= Drivebase ================= */

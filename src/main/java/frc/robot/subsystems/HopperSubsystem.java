@@ -7,6 +7,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotContainer;
@@ -59,8 +60,8 @@ public class HopperSubsystem extends SubsystemBase {
      */
     public Command manualHopperControl() {
         return run(() -> {
-            Trigger rightBumper = RobotContainer.driverXbox.rightBumper();
-            Trigger leftBumper = RobotContainer.driverXbox.leftBumper();
+            Trigger rightBumper = RobotContainer.mechXbox.rightBumper();
+            Trigger leftBumper = RobotContainer.mechXbox.leftBumper();
 
             if (rightBumper.getAsBoolean()) {
                 setHopperSpeed(0.1027); // Set speed to 50% when right bumper is pressed
@@ -78,17 +79,25 @@ public class HopperSubsystem extends SubsystemBase {
      * reverse to retract it.
      */
     public Command hopperEnlarger2000Command() {
-        if (!hopperEnlarged) {
+        return Commands.defer(() -> {
+            if (!hopperEnlarged) {
             // Example: run the hopper at 10% speed for 2 seconds to fully enlarge (tuning is required)
-            return run(() -> setHopperSpeed(0.1))
-                .withTimeout(2.0) // Time how long it takes to fully extend the hopper with a known speed
-                .andThen(runOnce(() -> setHopperSpeed(0.0)));
-        } else {
+                return run(() -> setHopperSpeed(0.1))
+                        .withTimeout(2.0) // Time how long it takes to fully extend the hopper with a known speed
+                        .finallyDo(() -> {
+                            setHopperSpeed(0.0);
+                            hopperEnlarged = true;
+                        });
+            } else {
             // Example: run the hopper at 10% speed for 2 seconds to fully enlarge (tuning is required)
-            return run(() -> setHopperSpeed(-0.1))
-                .withTimeout(2.0) // Time how long it takes to fully retract the hopper with a known speed
-                .andThen(runOnce(() -> setHopperSpeed(0.0)));
-        }
+                return run(() -> setHopperSpeed(-0.1))
+                        .withTimeout(2.0) // Time how long it takes to fully retract the hopper with a known speed
+                        .finallyDo(() -> {
+                            setHopperSpeed(0.0);
+                            hopperEnlarged = false;
+                        });
+            }
+        }, java.util.Set.of(this));
     }
 
     /**
