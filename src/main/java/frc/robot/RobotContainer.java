@@ -102,27 +102,14 @@ public class RobotContainer {
       .allianceRelativeControl(true);
 
   // Derive the heading axis with math!
-  SwerveInputStream driveDirectAngleKeyboard     = driveAngularVelocityKeyboard.copy()
-                                                                               .withControllerHeadingAxis(() ->
-                                                                                                              Math.sin(
-          driverXbox.getRawAxis(
-              2) *
-                                                                                                                  Math.PI) *
-          (Math.PI *
-              2),
-                                                                                                          () ->
-                                                                                                              Math.cos(
-              driverXbox.getRawAxis(
-                  2) *
-                                                                                                                  Math.PI) *
-              (Math.PI *
-                  2))
+  SwerveInputStream driveDirectAngleKeyboard = driveAngularVelocityKeyboard.copy().withControllerHeadingAxis(
+      () -> Math.sin(driverXbox.getRawAxis(2) * Math.PI) * (Math.PI * 2),
+      () -> Math.cos(driverXbox.getRawAxis(2) * Math.PI) * (Math.PI * 2))
       .headingWhile(true)
       .translationHeadingOffset(true)
-      .translationHeadingOffset(Rotation2d.fromDegrees(
-          0));
+      .translationHeadingOffset(Rotation2d.fromDegrees(0));
 
-   // Constructs a SendableChooser variable that allows auto commands to be sent to the dashboard via NetworkTables
+  // Constructs a SendableChooser variable that allows auto commands to be sent to the dashboard via NetworkTables
   private final SendableChooser<Command> m_chooser;
 
   /**
@@ -224,12 +211,12 @@ public class RobotContainer {
           new ProfiledPIDController(5,
               0,
               0,
-              new Constraints(Units.degreesToRadians(360),
-                                                                                      Units.degreesToRadians(180))
-                                            ));
+              new Constraints(Units.degreesToRadians(360), Units.degreesToRadians(180))));
+      
       driverXbox.start().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
       driverXbox.button(1).whileTrue(drivebase.sysIdDriveMotorCommand());
-      driverXbox.button(2).whileTrue(Commands.runEnd(() -> driveDirectAngleKeyboard.driveToPoseEnabled(true),
+      driverXbox.button(2).whileTrue(Commands.runEnd(
+          () -> driveDirectAngleKeyboard.driveToPoseEnabled(true),
           () -> driveDirectAngleKeyboard.driveToPoseEnabled(false)));
     }
 
