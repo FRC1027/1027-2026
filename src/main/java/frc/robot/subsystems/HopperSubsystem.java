@@ -10,8 +10,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 import frc.robot.RobotContainer;
 import frc.robot.util.Constants.HopperConstants;
+
+import java.util.Set;
 
 /**
  * Subsystem that controls hopper motors used to enlarge the holding space for the balls.
@@ -57,6 +60,8 @@ public class HopperSubsystem extends SubsystemBase {
     /**
      * Manual hopper control using driver bumpers:
      * right bumper feeds forward, left bumper reverses, neither stops.
+     * 
+     * KOWN ISSUE: This command will not work properly because it does not update the hopperEnlarged state variable.
      */
     public Command manualHopperControl() {
         return run(() -> {
@@ -97,7 +102,7 @@ public class HopperSubsystem extends SubsystemBase {
                             hopperEnlarged = false;
                         });
             }
-        }, java.util.Set.of(this));
+        }, Set.of(this));
     }
 
     /**

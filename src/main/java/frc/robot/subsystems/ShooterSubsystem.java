@@ -24,6 +24,8 @@ import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.Utils;
 
+import java.util.Collections;
+
 public class ShooterSubsystem extends SubsystemBase {
     // Limelight NetworkTable used to fetch target 3D pose data.
     private NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
@@ -155,7 +157,7 @@ public class ShooterSubsystem extends SubsystemBase {
             }
             // If no valid tag is seen, return a "do-nothing" command to avoid unintended motion.
             return Commands.none();
-        }, java.util.Collections.singleton(this));
+        }, Collections.singleton(this));
     }
 
     /**
@@ -168,19 +170,6 @@ public class ShooterSubsystem extends SubsystemBase {
             this::setShooterRPS,
             () -> shooterMotor1.setControl(new VelocityVoltage(0))
         );
-    }
-
-    /**
-     * Runs the intake in reverse at a fixed speed for 2 seconds, then stops.
-     * 
-     * @return command that reverses the shooter for a short, timed outtake
-     */
-    public Command outtake() {
-        return run(() -> {
-            setShooterSpeed(-ShooterConstants.SHOOTER_POWER); // Reverse shooter for outtake
-        }).withTimeout(2.0) // Run for 2 seconds
-          .andThen(runOnce(() -> shooterMotor1.setControl(new VelocityVoltage(0))
-          )); 
     }
 
     /**
