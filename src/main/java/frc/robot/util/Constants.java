@@ -208,6 +208,8 @@ public final class Constants {
     public static final int OBJECT_DETECTION_PIPELINE_INDEX = 1;
   }
 
+  /* ================= Indexer ================= */
+
   public static final class IndexerConstants {
     private IndexerConstants() {} // Prevent instantiation
 
