@@ -30,6 +30,9 @@ public class ShooterSubsystem extends SubsystemBase {
     // Limelight NetworkTable used to fetch target 3D pose data.
     private NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
+    // Reference to the IndexerSubsystem to run the indexer command in parallel with shooting.
+    private final IndexerSubsystem m_indexer;
+
     // Primary shooter motor controller (leader).
     private final TalonFX shooterMotor1;
 
@@ -40,7 +43,10 @@ public class ShooterSubsystem extends SubsystemBase {
      * Creates the shooter subsystem, configures TalonFX control gains, and
      * sets up follower behavior and dashboard tuning entries.
      */
-    public ShooterSubsystem() {
+    public ShooterSubsystem(IndexerSubsystem m_indexer) {
+        // Store the reference to the IndexerSubsystem for use in shooting commands.
+        this.m_indexer = m_indexer;
+
         // Initialize the shooter motors using configured CAN IDs.
         shooterMotor1 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID1);
         shooterMotor2 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID2);
@@ -163,12 +169,16 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * Runs the intake forward at a fixed speed for a certian period of time, then stops.
      *
-     * @return command that spins the shooter using Limelight-based RPS until interrupted
+     * @return command that spins the shooter using Limelight-based RPS until interrupted, in parallel with
+     * the indexer that feeds balls into the shooter, then stops the shooter and indexer when the command ends.
      */
     public Command shoot() {
-        return runEnd(
-            this::setShooterRPS,
-            () -> shooterMotor1.setControl(new VelocityVoltage(0))
+        return Commands.deadline(
+            runEnd(
+                this::setShooterRPS, // Continuously update the shooter RPS based on Limelight data while the command is active.
+                () -> shooterMotor1.setControl(new VelocityVoltage(0)) // When the user released the button, stop the shooter motor.
+            ),
+            m_indexer.runIndexerCommand() // Run the indexer command in parallel to feed balls into the shooter while shooting. The indexer will stop when the shoot command ends.
         );
     }
 

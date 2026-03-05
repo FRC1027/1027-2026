@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.auto.AutoShootAtTag4;
 import frc.robot.commands.DriveTowardTargetCommand;
 import frc.robot.subsystems.HopperSubsystem;
+import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
@@ -55,8 +56,11 @@ public class RobotContainer {
   // Defining the IntakeSubsystem
   private final IntakeSubsystem m_intake = new IntakeSubsystem(m_hopper::getHopperEnlarged);
 
+  // Defining the IndexerSubsystem
+  private final IndexerSubsystem m_indexer = new IndexerSubsystem();
+
   // Defining the ShooterSubsystem
-  private final ShooterSubsystem m_shooter = new ShooterSubsystem();
+  private final ShooterSubsystem m_shooter = new ShooterSubsystem(m_indexer);
 
   // Defining DriveTowardTagCommand (Drive Mode) ** Uses AprilTag detection **
   private final DriveTowardTargetCommand m_DriveTowardTagCommand = new DriveTowardTargetCommand(drivebase, true);
@@ -177,18 +181,21 @@ public class RobotContainer {
     mechXbox.x().onTrue(m_intake.continuousIntakeCommand());
 
     // Controls the shooter with the `y` button on the mechXbox
-    mechXbox.y().whileTrue(m_shooter.shoot());
+    mechXbox.y().onTrue(m_shooter.shoot());
 
     // Controls the shooter to align and shoot at a target tag with the `b` button on the mechXbox
     mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
 
     /* ================= Driver Control Bindings ================= */
 
-    // Controls the robot to drive and align toward a target tag with the `b` button on the driverXbox
-    driverXbox.b().whileTrue(m_DriveTowardTagCommand);
+    // Controls the shooter to align and shoot at a target tag with the `a` button on the driverXbox
+    driverXbox.a().whileTrue(m_shooter.shootAlign(drivebase));
 
     // Controls the robot to drive and align toward a game piece with the `y` button on the driverXbox
     driverXbox.y().whileTrue(m_DriveTowardGamePieceCommand);
+
+    // Controls the robot to drive and align toward a target tag with the `b` button on the driverXbox
+    driverXbox.b().whileTrue(m_DriveTowardTagCommand);
 
     // Controls the robot to align with a target tag with the `x` button on the driverXbox
     driverXbox.x().whileTrue(m_AlignTagCommand);

@@ -186,7 +186,11 @@ public final class Constants {
   public static final class IntakeConstants {
     private IntakeConstants() {} // Prevent instantiation
 
-    public static final int INTAKE_MOTOR_ID = 0;
+    /** CAN ID for the back intake motor. */
+    public static final int BACK_INTAKE_MOTOR_ID = 0;
+
+    /** CAN ID for the front intake motor. */
+    public static final int FRONT_INTAKE_MOTOR_ID = 0;
   }
 
   /* ================= Object Recognition ================= */
@@ -202,6 +206,13 @@ public final class Constants {
 
     /** Pipeline index for neural network object detection. */
     public static final int OBJECT_DETECTION_PIPELINE_INDEX = 1;
+  }
+
+  public static final class IndexerConstants {
+    private IndexerConstants() {} // Prevent instantiation
+
+    /** CAN ID for the indexer motor. */
+    public static final int INDEXER_MOTOR_ID = 0;
   }
 
   /* ================= Drivebase ================= */
@@ -223,28 +234,6 @@ public final class Constants {
 
     /** Scalar applied to turning input for driver feel. */
     public static final double TURN_CONSTANT = 6.0;
-  }
-
-  /* ================= Elevator ================= */
-
-  public static final class ElevatorConstants {
-    private ElevatorConstants() {} // Prevent instantiation
-
-    /** Spark MAX configuration for the elevator motor controller. */
-    public static final SparkMaxConfig ELEVATOR_MOTOR_CONFIG = new SparkMaxConfig();
-
-    static {
-      // Basic motor behavior: brake when idle and enforce a current limit.
-      ELEVATOR_MOTOR_CONFIG
-          .idleMode(IdleMode.kBrake)
-          .smartCurrentLimit(60);
-
-      // Closed-loop settings for position/velocity control (tune as needed).
-      ELEVATOR_MOTOR_CONFIG.closedLoop
-          .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-          .pid(0.1, 0.0, 0.0)
-          .outputRange(-1, 1);
-    }
   }
 
   /* ================= Turret ================= */

@@ -11,6 +11,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
 import frc.robot.RobotContainer;
 import frc.robot.util.Constants.IntakeConstants;
 import frc.robot.util.Utils;
@@ -19,10 +20,13 @@ public class IntakeSubsystem extends SubsystemBase {
     // Boolean supplier to check if the hopper is enlarged, allowing for coordinated control between subsystems.
     private final BooleanSupplier isHopperEnlarged;
 
-    // Intake motor
-    private final SparkMax intakeMotor;
+    // Back intake motor
+    private final SparkMax backIntakeMotor;
 
-    // Shared motor configuration for all intake instances
+    // Front intake motor
+    private final SparkMax frontIntakeMotor;
+
+    // Motor configuration for both intake motors
     public static final SparkMaxConfig intakeConfig = new SparkMaxConfig();
 
     static {
@@ -31,16 +35,26 @@ public class IntakeSubsystem extends SubsystemBase {
             .smartCurrentLimit(50);
     }
 
-    @SuppressWarnings("removal") // Suppress warnings about deprecated ResetMode and PersistMode usage in SparkMax configuration
+    @SuppressWarnings("removal") // Suppress warnings about deprecated ResetMode and PersistMode usage in SparkMax configuration.
     public IntakeSubsystem(BooleanSupplier isHopperEnlarged) {
         // Store the BooleanSupplier for checking hopper state, enabling dynamic response to hopper enlargement.
         this.isHopperEnlarged = isHopperEnlarged;
 
-        // Initialize the intake motor using configured CAN ID.
-        intakeMotor = new SparkMax(IntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
+        // Initialize the intake motors using configured CAN IDs.
+        backIntakeMotor = new SparkMax(IntakeConstants.BACK_INTAKE_MOTOR_ID, MotorType.kBrushless);
+        frontIntakeMotor = new SparkMax(IntakeConstants.FRONT_INTAKE_MOTOR_ID, MotorType.kBrushless);
 
-        // Configure the intake motor with the shared configuration, using safe parameter reset and persistent parameter storage.
-        intakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        // Configure the back intake motor with the shared configuration, using safe parameter reset and persistent parameter storage.
+        backIntakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        // Configure follower behavior, such that the front intake motor follows the back intake motor with inverted direction.
+        SparkMaxConfig intakeFrontConfig = new SparkMaxConfig();
+        intakeFrontConfig
+            .apply(intakeConfig) // Apply the same base configuration to the front intake motor.
+            .follow(backIntakeMotor, true); // true = invert follower direction
+        
+        // Configure the front intake motor with the follower configuration, ensuring it mirrors the back intake motor's behavior in an inverted manner.
+        frontIntakeMotor.configure(intakeFrontConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     /**
@@ -92,6 +106,6 @@ public class IntakeSubsystem extends SubsystemBase {
      * @param speed The speed to set the motor to (between -1.0 and 1.0).
      */
     public void setIntakeSpeed(double speed) {
-        intakeMotor.set(speed);
+        backIntakeMotor.set(speed);
     }
 }
