@@ -17,6 +17,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
+
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -33,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
+
 import frc.robot.util.Constants.RobotProperties;
 import frc.robot.util.LimelightHelpers;
 
@@ -42,7 +44,9 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+
 import org.json.simple.parser.ParseException;
+
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
@@ -59,12 +63,12 @@ public class SwerveSubsystem extends SubsystemBase
   /**
    * Swerve drive object.
    */
-  private final SwerveDrive         swerveDrive;
+  private final SwerveDrive swerveDrive;
 
   /**
    * Enable vision odometry updates while driving.
    */
-  private final boolean             visionDriveTest     = false;
+  private final boolean visionDriveTest     = false;
 
   /**
    * Initialize {@link SwerveDrive} with the directory provided.

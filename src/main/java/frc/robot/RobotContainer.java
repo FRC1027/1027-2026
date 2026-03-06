@@ -33,6 +33,7 @@ import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.OperatorConstants;
 
 import java.io.File;
+
 import swervelib.SwerveInputStream;
 
 /**
@@ -41,35 +42,38 @@ import swervelib.SwerveInputStream;
  * Instead, the structure of the robot (including subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-  // Driver and Mechanism controllers
+  // Defining and Initializing the Driver and Mechanism Controllers
   public static final CommandXboxController driverXbox = new CommandXboxController(0);
   public static final CommandXboxController mechXbox = new CommandXboxController(1);
 
-  // The robot's subsystems and commands are defined here...
+  // Declaring and Initializing the SwerveSubsystem
   private final SwerveSubsystem drivebase = new SwerveSubsystem(
       new File(Filesystem.getDeployDirectory(), "swerve")
   );
 
-  // Defining the HopperSubsystem
-  private final HopperSubsystem m_hopper = new HopperSubsystem();
+  // Declaring the HopperSubsystem
+  private final HopperSubsystem m_hopper;
 
-  // Defining the IntakeSubsystem
-  private final IntakeSubsystem m_intake = new IntakeSubsystem(m_hopper::getHopperEnlarged);
+  // Declaring the IntakeSubsystem
+  private final IntakeSubsystem m_intake;
 
-  // Defining the IndexerSubsystem
-  private final IndexerSubsystem m_indexer = new IndexerSubsystem();
+  // Declaring the IndexerSubsystem
+  private final IndexerSubsystem m_indexer;
 
-  // Defining the ShooterSubsystem
-  private final ShooterSubsystem m_shooter = new ShooterSubsystem(m_indexer, m_hopper);
+  // Declaring the ShooterSubsystem
+  private final ShooterSubsystem m_shooter;
 
-  // Defining DriveTowardTagCommand (Drive Mode) ** Uses AprilTag detection **
-  private final DriveTowardTargetCommand m_DriveTowardTagCommand = new DriveTowardTargetCommand(drivebase, true, m_hopper);
+  // Declaring DriveTowardTagCommand (Drive Mode) ** Uses AprilTag detection **
+  private final DriveTowardTargetCommand m_DriveTowardTagCommand;
 
-  // Defining DriveTowardGamePieceCommand (Drive Mode) ** Uses object detection **
-  private final DriveTowardTargetCommand m_DriveTowardGamePieceCommand = new DriveTowardTargetCommand(drivebase, false, m_hopper);
+  // Declaring DriveTowardGamePieceCommand (Drive Mode) ** Uses object detection **
+  private final DriveTowardTargetCommand m_DriveTowardGamePieceCommand;
 
-  // Defining AlignTagCommand (Align Only Mode - MaxSpeed = 0) ** Only uses AprilTag detection, not object detection **
-  private final DriveTowardTargetCommand m_AlignTagCommand = new DriveTowardTargetCommand(drivebase, 0.0, 2.0, m_hopper);
+  // Declaring AlignTagCommand (Align Only Mode - MaxSpeed = 0) ** Only uses AprilTag detection, not object detection **
+  private final DriveTowardTargetCommand m_AlignTagCommand;
+
+  // Constructs a SendableChooser for autonomous command selection on the dashboard, allowing for dynamic selection of autonomous routines.
+  private final SendableChooser<Command> m_chooser;
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
@@ -113,44 +117,64 @@ public class RobotContainer {
       .translationHeadingOffset(true)
       .translationHeadingOffset(Rotation2d.fromDegrees(0));
 
-  // Constructs a SendableChooser variable that allows auto commands to be sent to the dashboard via NetworkTables
-  private final SendableChooser<Command> m_chooser;
-
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
-    // Configure/register any and all future commands here
-    configureBindings();
-
+    // Silence the joystick connection warning that can appear on the dashboard when using certain controllers
     DriverStation.silenceJoystickConnectionWarning(true);
-    NamedCommands.registerCommand("test", Commands.print("I EXIST"));
 
-    // Creates a SendableChooser that adds all of the PathPlanner Autos to the dashboard
+    // Initialize the HopperSubsystem
+    m_hopper = new HopperSubsystem();
+
+    // Initialize the IntakeSubsystem
+    m_intake = new IntakeSubsystem(m_hopper::getHopperEnlarged);
+
+    // Initialize the IndexerSubsystem
+    m_indexer = new IndexerSubsystem();
+
+    // Initialize the ShooterSubsystem
+    m_shooter = new ShooterSubsystem(m_indexer, m_hopper);
+
+    // Initialize the DriveTowardTagCommand (Drive Mode) ** Uses AprilTag detection **
+    m_DriveTowardTagCommand = new DriveTowardTargetCommand(drivebase, true, m_hopper);
+
+    // Initialize the DriveTowardGamePieceCommand (Drive Mode) ** Uses object detection **
+    m_DriveTowardGamePieceCommand = new DriveTowardTargetCommand(drivebase, false, m_hopper);
+
+    // Initialize the AlignTagCommand (Align Only Mode - MaxSpeed = 0) ** Only uses AprilTag detection, not object detection **
+    m_AlignTagCommand = new DriveTowardTargetCommand(drivebase, 0.0, 2.0, m_hopper);
+
+    // Initialize the SendableChooser that adds all of the PathPlanner Autos to the dashboard
     m_chooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", m_chooser);
 
     /**
-     * Add pathplanner commands to the dashboard with the following line of code:
-     * 
-     * m_chooser.addOption("Name of Command", m_insertNameHere);
+     * Register NamedCommands for use in PathPlanner autonomous paths here. This allows the commands to be
+     * referenced by name in the PathPlanner interface when creating autonomous routines.
      */
+    NamedCommands.registerCommand("shootCommand", m_shooter.shoot());
+    NamedCommands.registerCommand("shootAlignCommand", m_shooter.shootAlign(drivebase));
+    NamedCommands.registerCommand("enlargeHopperCommand", m_hopper.hopperEnlarger2000Command());
+    NamedCommands.registerCommand("driveTowardGamePieceCommand", m_DriveTowardGamePieceCommand);
 
-    // Add other auotonomous paths here so they can appear on the dashboard
+    // Call the configureBindings() method to set up the trigger bindings for the robot's controls.
+    configureBindings();
+
+    // Add manually coded auotonomous paths here so they can appear on the dashboard
     m_chooser.addOption("Shoot At Tag 4", new AutoShootAtTag4(drivebase, m_shooter));
 
-    // Default Auto: Drive forward ~1 foot, then stop
-    m_chooser.setDefaultOption("Drive Forward 1ft (Default)",
-        Commands.run(() -> drivebase.drive(
-        new Translation2d(0.25, 0.0),               // forward 0.25 m/s
-              0.0,                             // no rotation
-              true), drivebase)           // field-relative
-      .withTimeout(Units.feetToMeters(1) / 0.25)   // ~1 foot distance
-            .andThen(() -> drivebase.drive(
-                new Translation2d(0.0, 0.0),
-                0.0,
-              true))                      // stop robot
-    );
+    // Sets the following command as the Default Auto: Drive forward ~1 foot, then stop
+    m_chooser.setDefaultOption("Drive Forward 1ft (Default)", Commands.run(
+      () -> drivebase.drive(
+          new Translation2d(0.25, 0.0),                // forward 0.25 m/s
+              0.0,                                // no rotation
+              true), drivebase)              // field-relative
+          .withTimeout(Units.feetToMeters(1) / 0.25)  // ~1 foot distance
+          .andThen(() -> drivebase.drive(
+              new Translation2d(0.0, 0.0),
+                  0.0,
+                  true)));                      // stop robot
   }
 
   /**
@@ -253,9 +277,6 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return m_chooser.getSelected();
-
-    // An example command will be run in autonomous
-    //return drivebase.getAutonomousCommand("New Auto");
   }
 
   public void setMotorBrake(boolean brake) {
