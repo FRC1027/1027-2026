@@ -60,16 +60,16 @@ public class RobotContainer {
   private final IndexerSubsystem m_indexer = new IndexerSubsystem();
 
   // Defining the ShooterSubsystem
-  private final ShooterSubsystem m_shooter = new ShooterSubsystem(m_indexer);
+  private final ShooterSubsystem m_shooter = new ShooterSubsystem(m_indexer, m_hopper);
 
   // Defining DriveTowardTagCommand (Drive Mode) ** Uses AprilTag detection **
-  private final DriveTowardTargetCommand m_DriveTowardTagCommand = new DriveTowardTargetCommand(drivebase, true);
+  private final DriveTowardTargetCommand m_DriveTowardTagCommand = new DriveTowardTargetCommand(drivebase, true, m_hopper);
 
   // Defining DriveTowardGamePieceCommand (Drive Mode) ** Uses object detection **
-  private final DriveTowardTargetCommand m_DriveTowardGamePieceCommand = new DriveTowardTargetCommand(drivebase, false);
+  private final DriveTowardTargetCommand m_DriveTowardGamePieceCommand = new DriveTowardTargetCommand(drivebase, false, m_hopper);
 
   // Defining AlignTagCommand (Align Only Mode - MaxSpeed = 0) ** Only uses AprilTag detection, not object detection **
-  private final DriveTowardTargetCommand m_AlignTagCommand = new DriveTowardTargetCommand(drivebase, 0.0, 2.0);
+  private final DriveTowardTargetCommand m_AlignTagCommand = new DriveTowardTargetCommand(drivebase, 0.0, 2.0, m_hopper);
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.

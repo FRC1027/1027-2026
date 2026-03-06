@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import edu.wpi.first.networktables.NetworkTable;
+import frc.robot.util.Constants.HopperConstants;
 import frc.robot.util.Constants.RobotProperties;
 
 /**
@@ -35,7 +36,7 @@ public final class Utils {
    * 
    * @return Distance from bumper to target tag in meters, or NaN if the Limelight pose is unavailable.
    */
-  public static double calculateDistanceToTarget(NetworkTable limelight) {
+  public static double calculateDistanceToTarget(NetworkTable limelight, boolean isHopperExtended) {
     // Read the target pose in the camera coordinate frame (x = left/right, y = up/down, z = forward).
     double[] pose = limelight.getEntry("targetpose_cameraspace").getDoubleArray(new double[0]);
 
@@ -50,6 +51,11 @@ public final class Utils {
 
     // Compute planar distance from camera to tag using X/Z components.
     double cameraToTag = Math.sqrt(tx * tx + tz * tz);
+
+    // If the hopper is extended, subtract the extension length from the distance.
+    if (isHopperExtended) {
+      cameraToTag -= HopperConstants.HOPPER_EXTENTION_LENGTH;
+    }
 
     // Convert camera-to-tag to bumper-to-tag by subtracting the camera offset.
     return Math.max(0.0, cameraToTag - RobotProperties.CAM_TO_BUMPER_DISTANCE);

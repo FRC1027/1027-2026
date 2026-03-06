@@ -15,6 +15,9 @@ import frc.robot.RobotContainer;
 import frc.robot.util.Constants.IndexerConstants;
 import frc.robot.util.Utils;
 
+/**
+ * Subsystem that controls the indexer motor used to feed game pieces into the shooter.
+ */
 public class IndexerSubsystem extends SubsystemBase {
     
     // Indexer motor
@@ -48,33 +51,35 @@ public class IndexerSubsystem extends SubsystemBase {
      */
     public Command manualIndexerCommand() {
         return run(() -> {
-            // Get the right joystick X-axis value from the mechXbox controller to control the indexer motor speed.
+            // Read the mech controller right-stick Y axis for manual indexer speed control.
             double yAxisJoystickValue = Utils.deadbandReturn(RobotContainer.mechXbox.getRightY(), 0.1);
 
             if (yAxisJoystickValue > 0) {
-                // If the joystick is pushed to the right, set the indexer motor speed to the joystick value (positive).
+                // Positive stick input feeds forward.
                 setIndexerSpeed(yAxisJoystickValue / 4);
             } else if (yAxisJoystickValue < 0) {
-                // If the joystick is pushed to the left, set the indexer motor speed to the joystick value (negative).
+                // Negative stick input reverses feed direction.
                 setIndexerSpeed(yAxisJoystickValue / 4);
             } else {
-                // If the joystick is in the deadband (near center), stop the indexer motor.
+                // No input after deadband, so stop the indexer.
                 setIndexerSpeed(0);
             }
         });
     }
 
     /**
-     * Runs the indexer motor at a fixed speed after a delay, then stops.
+     * Returns the current feed command used by shooter routines.
      * 
-     * @return command that waits for 3 seconds before running the indexer motor at half speed,
-     * then stops the indexer motor when the command ends or is interrupted.
+     * Constructs a delayed command that starts the indexer and allows the shooter to spin up before
+     * feeding, while ensuring that the indexer is stopped when the command ends or is interrupted.
+     * 
+     * @return command that leaves the indexer stopped and forces zero output on end/interruption
      */
     public Command runIndexerCommand() {
         return runEnd(
-            () -> Commands.waitSeconds(3.0) // Wait for 3 seconds before starting the indexer motor to allow time for the shooter to spin up.
-                    .andThen(() -> setIndexerSpeed(0.5)), // Then run the indexer motor at half speed when the command is active.
-            () -> setIndexerSpeed(0.0)    // Stop the indexer motor when the command ends or is interrupted.
+            () -> Commands.waitSeconds(3.0) // Delays the start of the indexer by a set time interval
+                    .andThen(() -> setIndexerSpeed(0.5)),
+            () -> setIndexerSpeed(0.0) // Ensure indexer is stopped when this command ends or is interrupted.
         );
     }
 

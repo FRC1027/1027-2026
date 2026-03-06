@@ -8,6 +8,9 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.Constants.ClimbConstants;
 
+/**
+ * Subsystem that controls the climb mechanism using Motion Magic position control.
+ */
 public class ClimbSubsystem extends SubsystemBase {
     // Primary climb motor controller.
     private final TalonFX climbMotor1;
@@ -26,7 +29,7 @@ public class ClimbSubsystem extends SubsystemBase {
         // Configure Motion Magic and closed-loop gains.
         TalonFXConfiguration config = new TalonFXConfiguration();
 
-        // PID and Feedforward
+        // Apply configured PID and feedforward gains.
         config.Slot0.kP = ClimbConstants.kP;
         config.Slot0.kI = ClimbConstants.kI;
         config.Slot0.kD = ClimbConstants.kD;
@@ -35,18 +38,18 @@ public class ClimbSubsystem extends SubsystemBase {
         config.Slot0.kG = ClimbConstants.kG;
         // config.Slot0.GravityType = GravityTypeValue.Elevator_Static; // Configure if using gravity compensation types
 
-        // Motion Magic speed, acceleration, and jerk contrainsts
+        // Apply Motion Magic speed, acceleration, and jerk constraints.
         config.MotionMagic.MotionMagicCruiseVelocity = ClimbConstants.MM_CRUISE_VELOCITY;
         config.MotionMagic.MotionMagicAcceleration = ClimbConstants.MM_ACCELERATION;
         config.MotionMagic.MotionMagicJerk = ClimbConstants.MM_JERK;
 
-        // Soft Limits
+        // Enable software soft limits for extension and retraction.
         config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ClimbConstants.SOFT_LIMIT_FORWARD;
         config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = ClimbConstants.SOFT_LIMIT_REVERSE;
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
-        // Current Limits
+        // Enforce motor current limits for hardware protection.
         config.CurrentLimits.StatorCurrentLimit = ClimbConstants.CURRENT_LIMIT;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
 

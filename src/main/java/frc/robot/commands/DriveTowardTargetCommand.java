@@ -5,7 +5,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-
+import frc.robot.subsystems.HopperSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
@@ -46,8 +46,11 @@ public class DriveTowardTargetCommand extends Command {
     // Current detection state of the detected game piece.
     private final DetectionState currentState = new DetectionState();
 
-    // Limelight NetworkTable used to fetch target 3D pose data, used to calculate distance to target.
-    private NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
+    // Limelight NetworkTable used to fetch pose/target state values for control.
+    private final NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
+
+    // Reference to the HopperSubsystem to check hopper extension state for distance calculations.
+    private final HopperSubsystem m_hopper;
 
     // Instance of the SwerveSubsystem to control the robot's movement
     private final SwerveSubsystem drivebase;
@@ -58,10 +61,10 @@ public class DriveTowardTargetCommand extends Command {
     // Maximum rotation speed limit (rad/s)
     private final double maxRotation;
 
-    // Boolean to indicate if we are currently tracking an AprilTag or a game piece (object detection)
+    // If true, run AprilTag mode; if false, run neural object detection mode.
     private boolean detectAprilTag;
 
-    // Desired stopping distance from the target (from bumper to tag) in meters. The robot will stop when it reaches this distance.
+    // Desired stopping distance from bumper to target in meters.
     private double STOP_DISTANCE = 0.5;
 
     // Current forward and rotation speeds
@@ -72,35 +75,37 @@ public class DriveTowardTargetCommand extends Command {
     private double tx;
 
     /**
-     * Constructor for DriveTowardTagCommand with specified max speeds (will must likely be used for
-     * align-only with maxSpeed = 0). By default, it will use AprilTag detection. To use object
-     * detection, use the other constructor.
+     * Constructor for DriveTowardTargetCommand with explicit speed limits.
+     * This constructor does not set detection mode, so the command uses the field default
+     * (`detectAprilTag == false`) unless it is changed elsewhere.
      * 
      * @param drivebase   The swerve drive subsystem used to move the robot.
      * @param maxSpeed    The maximum forward speed in meters per second. Set to 0 for align-only.
      * @param maxRotation The maximum rotation speed in radians per second.
      */
-    public DriveTowardTargetCommand(SwerveSubsystem drivebase, double maxSpeed, double maxRotation) {
+    public DriveTowardTargetCommand(SwerveSubsystem drivebase, double maxSpeed, double maxRotation, HopperSubsystem m_hopper) {
         this.drivebase = drivebase;
         this.maxSpeed = maxSpeed;
         this.maxRotation = maxRotation;
+        this.m_hopper = m_hopper;
 
         // Require the drivebase so no other drive commands run at the same time
         addRequirements(drivebase);
     }
 
     /**
-     * Constructor for DriveTowardTagCommand that allows specifying whether to detect AprilTags or
+     * Constructor for DriveTowardTargetCommand that allows specifying whether to detect AprilTags or
      * use object detection. It uses default max speeds (2.0 m/s for forward, 2.0 rad/s for rotation).
      * 
      * @param drivebase      The swerve drive subsystem.
      * @param detectAprilTag If true, uses AprilTag detection; if false, uses object detection.
      */
-    public DriveTowardTargetCommand(SwerveSubsystem drivebase, boolean detectAprilTag) {
+    public DriveTowardTargetCommand(SwerveSubsystem drivebase, boolean detectAprilTag, HopperSubsystem m_hopper) {
         this.drivebase = drivebase;
         this.maxSpeed = 2.0;
         this.maxRotation = 2.0;
         this.detectAprilTag = detectAprilTag;
+        this.m_hopper = m_hopper;
 
         if (!detectAprilTag) {
             // If using object detection, we want to use a closer stop distance since we want to be right on top of the game piece to pick it up.
@@ -114,16 +119,16 @@ public class DriveTowardTargetCommand extends Command {
 
     @Override
     public void initialize() {
-        // Runs once when the command starts
+        // Runs once when the command starts.
 
-        // Set the appropriate Limelight pipeline based on the detection mode
+        // Select the appropriate Limelight pipeline for the active detection mode.
         if (detectAprilTag) {
             setPipelineToAprilTags();
         } else {
             setPipelineToObjectDetection();
         }
 
-        // Reset detection state during initialization to avoid using stale data from previous runs
+        // Reset detection state to avoid stale data from previous runs.
         currentState.clear();
 
         SmartDashboard.putString("LL Status", "Searching for target...");
@@ -131,12 +136,12 @@ public class DriveTowardTargetCommand extends Command {
 
     @Override
     public void execute() {
-        // Runs repeatedly while the command is active (approx. every 20ms)
+        // Runs repeatedly while the command is active (about every 20 ms).
 
         if (detectAprilTag) {
-            // AprilTag Detection Logic
+            // AprilTag detection branch.
 
-            // 1. Check if we have a valid fiducial ID to confirm we are seeing an AprilTag
+            // 1) Validate that a fiducial ID is currently detected.
             double fid = LimelightHelpers.getFiducialID(ObjectRecognitionConstants.LIMELIGHT_NAME);
             if (Double.isNaN(fid) || fid < 0.0) {
                 SmartDashboard.putString("LL Status", "Tag ID not found");
@@ -145,12 +150,12 @@ public class DriveTowardTargetCommand extends Command {
                 return;
             }
         } else {
-            // Object Detection Logic
+            // Object-detection branch.
 
-            // Get the latest results from the Limelight camera with the detected game piece(s).
+            // Get the latest Limelight object-detection results.
             LimelightResults results = LimelightHelpers.getLatestResults(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
-            // 1. Check for neural network detections
+            // 1) Ensure at least one neural-network detection is available.
             if (results.targets_Detector == null || results.targets_Detector.length == 0) {
                 SmartDashboard.putString("LL Status", "No object visible");
                 currentState.clear();
@@ -158,7 +163,7 @@ public class DriveTowardTargetCommand extends Command {
                 return;
             }
 
-            // Pick the first detection (highest confidence usually sorted first by Limelight)
+            // Store the first detection (typically highest confidence).
             LimelightTarget_Detector detection = results.targets_Detector[0];
             currentState.className = detection.className;
             currentState.confidence = detection.confidence;
@@ -166,8 +171,7 @@ public class DriveTowardTargetCommand extends Command {
 
         // --- SHARED DETECTION LOGIC ---
 
-        // 2. Get the "tv" (Target Valid) value from Limelight NetworkTables.
-        // If tv < 1.0, it means no valid target is currently visible to the Limelight.
+        // 2) Check the "tv" flag for target validity.
         double tv = limelight.getEntry("tv").getDouble(0.0);
         if (tv < 1.0) {
             SmartDashboard.putString("LL Status", "No target visible");
@@ -176,8 +180,7 @@ public class DriveTowardTargetCommand extends Command {
             return;
         }
 
-        // 3. Get the 3D pose of the target relative to the Limelight.
-        // This is an array of 6 values: [x, y, z, roll, pitch, yaw].
+        // 3) Read target pose relative to the Limelight camera.
         double[] pose = limelight.getEntry("targetpose_cameraspace").getDoubleArray(new double[0]);
         if (pose == null || pose.length < 3) {
             SmartDashboard.putString("LL Status", "Invalid pose data");
@@ -186,12 +189,11 @@ public class DriveTowardTargetCommand extends Command {
             return;
         }
 
-        // Extract tx coordinates from the pose. The other values (ty, tz) are available if needed, but are not used directly
-        // for control in this command since we calculate distance using the Utils method.
-        tx = pose[0];// Horizontal offset (left/right) in meters.
+        // Use camera-space X as horizontal aiming offset.
+        tx = pose[0]; // Horizontal offset (left/right) in meters.
 
-        // Calculate the straight-line distance using the Utils method, which accounts for the camera offset from the bumper.
-        currentState.distance = Utils.calculateDistanceToTarget(limelight);
+        // Calculate bumper-to-target distance from Limelight pose data.
+        currentState.distance = Utils.calculateDistanceToTarget(limelight, m_hopper.getHopperEnlarged());
         currentState.hasTarget = true;
 
         // Update SmartDashboard for debugging
@@ -201,22 +203,19 @@ public class DriveTowardTargetCommand extends Command {
 
         // --- CONTROL LOGIC ---
 
-        // A. Forward Speed Control
-        // Only drive forward if we have a maxSpeed > 0 and are further away than our desired stop distance.
+        // A) Forward speed control.
+        // Only drive forward when maxSpeed > 0 and target distance is above stop threshold.
         if (maxSpeed > 0 && currentState.distance > STOP_DISTANCE) {
-            // Proportional control: slow down as we get closer
-            // We divide by 4.0 to create a gentle deceleration curve
+            // Proportional approach speed that tapers as we get closer.
             double speedFactor = Math.min(1.0, currentState.distance / 4.0);
             forwardSpeed = maxSpeed * speedFactor;
         } else {
             forwardSpeed = 0.0;
         }
 
-        // B. Rotation Control
-        // Turn to face the tag (minimize tx)
+        // B) Rotation control to reduce horizontal offset (tx).
         double kP_turn = 1.0; // Proportional gain for turning
-        rotationSpeed = -kP_turn * tx; // Negative because positive tx means tag is to the right, so we turn right
-                                       // (negative Z rotation)
+        rotationSpeed = -kP_turn * tx; // Positive tx means target is right, so rotate right (negative Z).
 
         // Clamp rotation speed to our maximum allowed limit
         rotationSpeed = Math.max(-maxRotation, Math.min(maxRotation, rotationSpeed));
@@ -231,7 +230,7 @@ public class DriveTowardTargetCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        // Runs when the command finishes or is interrupted
+        // Runs when the command finishes or is interrupted.
         stopRobot();
         SmartDashboard.putString("LL Status", interrupted ? "Interrupted" : "Arrived at Target");
         System.out.println("[DriveTowardTarget] Ended");
@@ -241,16 +240,15 @@ public class DriveTowardTargetCommand extends Command {
     public boolean isFinished() {
         // Check if we should stop automatically based on target visibility and distance
 
-        // 1. If we lost the target, stop the command (driver can re-press to try again)
+        // 1) If we do not currently have a target, stop and let the driver re-trigger.
         if (!currentState.hasTarget) {
             return true;
         }
 
-        // 2. If we are driving forward (maxSpeed > 0) and reached the target, stop
+        // 2) In drive mode, finish once we reach the stop distance.
         boolean reachedTarget = (maxSpeed > 0) && (currentState.distance <= STOP_DISTANCE);
 
-        // Note: If maxSpeed is 0 (align only), we never "finish" based on distance.
-        // The driver must release the button to stop aligning.
+        // Note: In align-only mode (maxSpeed == 0), this command does not auto-finish on distance.
 
         return reachedTarget;
     }
@@ -276,5 +274,3 @@ public class DriveTowardTargetCommand extends Command {
         LimelightHelpers.setPipelineIndex(ObjectRecognitionConstants.LIMELIGHT_NAME, ObjectRecognitionConstants.OBJECT_DETECTION_PIPELINE_INDEX);
     }
 }
-
-// Per Madison's request, 280 lines =)

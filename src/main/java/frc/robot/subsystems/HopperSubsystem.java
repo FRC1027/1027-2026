@@ -61,7 +61,7 @@ public class HopperSubsystem extends SubsystemBase {
      * Manual hopper control using driver bumpers:
      * right bumper feeds forward, left bumper reverses, neither stops.
      * 
-     * KOWN ISSUE: This command will not work properly because it does not update the hopperEnlarged state variable.
+     * KNOWN ISSUE: This command does not update the hopperEnlarged state variable.
      */
     public Command manualHopperControl() {
         return run(() -> {
@@ -69,11 +69,11 @@ public class HopperSubsystem extends SubsystemBase {
             Trigger leftBumper = RobotContainer.mechXbox.leftBumper();
 
             if (rightBumper.getAsBoolean()) {
-                setHopperSpeed(0.1027); // Set speed to 50% when right bumper is pressed
+                setHopperSpeed(0.1027); // Run hopper forward while right bumper is held.
             } else if (leftBumper.getAsBoolean()) {
-                setHopperSpeed(-0.1027); // Set speed to -50% when left bumper is pressed
+                setHopperSpeed(-0.1027); // Run hopper in reverse while left bumper is held.
             } else {
-                setHopperSpeed(0.0); // Stop the hopper motor when neither bumper is pressed
+                setHopperSpeed(0.0); // Stop when neither bumper is pressed.
             }
         });
     }

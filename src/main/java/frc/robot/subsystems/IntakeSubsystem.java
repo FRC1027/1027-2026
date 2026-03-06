@@ -16,6 +16,9 @@ import frc.robot.RobotContainer;
 import frc.robot.util.Constants.IntakeConstants;
 import frc.robot.util.Utils;
 
+/**
+ * Subsystem that controls intake motors and coordinates operation with hopper state.
+ */
 public class IntakeSubsystem extends SubsystemBase {
     // Boolean supplier to check if the hopper is enlarged, allowing for coordinated control between subsystems.
     private final BooleanSupplier isHopperEnlarged;
@@ -35,6 +38,11 @@ public class IntakeSubsystem extends SubsystemBase {
             .smartCurrentLimit(50);
     }
 
+    /**
+     * Creates the intake subsystem and configures both intake motors.
+     *
+     * @param isHopperEnlarged supplier that reports whether hopper expansion allows intake operation
+     */
     @SuppressWarnings("removal") // Suppress warnings about deprecated ResetMode and PersistMode usage in SparkMax configuration.
     public IntakeSubsystem(BooleanSupplier isHopperEnlarged) {
         // Store the BooleanSupplier for checking hopper state, enabling dynamic response to hopper enlargement.
@@ -70,10 +78,10 @@ public class IntakeSubsystem extends SubsystemBase {
                 double leftTrigger = -Utils.deadbandReturn(RobotContainer.mechXbox.getLeftTriggerAxis(), 0.1);
 
                 if (rightTrigger > 0.0){
-                    // Scale trigger input after applying deadband for smooth manual intake control.
+                    // Scale trigger input after deadband for smoother manual intake control.
                     setIntakeSpeed(rightTrigger / 4);
                 } else if (leftTrigger < 0.0){
-                    // Scale trigger input after applying deadband for smooth manual outake control.
+                    // Scale trigger input after deadband for smoother manual outtake control.
                     setIntakeSpeed(leftTrigger / 4);
                 } else {
                     // No trigger input: stop the motor.
@@ -94,9 +102,9 @@ public class IntakeSubsystem extends SubsystemBase {
     public Command continuousIntakeCommand() { //
         return run(() -> {
             if (isHopperEnlarged.getAsBoolean()) {
-                setIntakeSpeed(0.5); // Run intake at 50% speed when hopper is enlarged
+                setIntakeSpeed(0.5); // Run intake at 50% output while hopper is enlarged.
             } else {
-                setIntakeSpeed(0.0); // Stop intake when hopper is not enlarged
+                setIntakeSpeed(0.0); // Stop intake when hopper is not enlarged.
             }
         });
     }

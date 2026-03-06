@@ -4,10 +4,6 @@
 
 package frc.robot.util;
 
-import com.revrobotics.spark.FeedbackSensor;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkMaxConfig;
-
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 
@@ -179,6 +175,9 @@ public final class Constants {
 
     /** CAN ID for the follower hopper motor. */
     public static final int HOPPER_MOTOR_ID2 = 0;
+
+    /** Hopper extension length in meters. */
+    public static final double HOPPER_EXTENTION_LENGTH = Units.inchesToMeters(0); // MEASURE THIS
   }
 
   /* ================= Intake ================= */
