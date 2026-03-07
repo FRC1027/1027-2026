@@ -8,6 +8,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -15,9 +16,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import frc.robot.RobotContainer;
 import frc.robot.commands.DriveTowardTargetCommand;
 import frc.robot.commands.LockWheelsCommand;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.ShooterConstants;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
@@ -43,7 +44,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private final TalonFX shooterMotor1;
 
     // Secondary shooter motor controller (follower).
-    private final TalonFX shooterMotor2;
+    //private final TalonFX shooterMotor2;
 
     /**
      * Creates the shooter subsystem, configures TalonFX control gains, and sets up
@@ -58,7 +59,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
         // Initialize the shooter motors using configured CAN IDs.
         shooterMotor1 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID1);
-        shooterMotor2 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID2);
+        //shooterMotor2 = new TalonFX(ShooterConstants.SHOOTER_MOTOR_ID2);
 
         // Configure velocity-loop gains and neutral mode for consistent flywheel behavior.
         TalonFXConfiguration config = new TalonFXConfiguration();
@@ -68,10 +69,10 @@ public class ShooterSubsystem extends SubsystemBase {
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         
         shooterMotor1.getConfigurator().apply(config);
-        shooterMotor2.getConfigurator().apply(config);
+        //shooterMotor2.getConfigurator().apply(config);
 
         // Set the second motor to follow the first motor with opposite direction to match motor layout.
-        shooterMotor2.setControl(new Follower(ShooterConstants.SHOOTER_MOTOR_ID1, MotorAlignmentValue.Opposed)); // Check if it should be Opposed or Aligned
+        //shooterMotor2.setControl(new Follower(ShooterConstants.SHOOTER_MOTOR_ID1, MotorAlignmentValue.Opposed)); // Check if it should be Opposed or Aligned
 
         // Publish the radius efficiency to SmartDashboard so it can be tuned live.
         SmartDashboard.putNumber("Shooter/RadiusEfficiency", ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
@@ -100,7 +101,8 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public double calculateWheelRPS() {
         // Calculate the distance from the bumper to the target tag using Limelight data.
-        double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight, m_hopper.getHopperEnlarged());
+        //double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight, m_hopper.getHopperEnlarged());
+        double bumperToTagDistance = Units.inchesToMeters(126); //meters
 
         // Return NaN if the distance data is missing or invalid.
         if (!Double.isFinite(bumperToTagDistance)) {
@@ -206,6 +208,12 @@ public class ShooterSubsystem extends SubsystemBase {
         // Convert wheel RPS to motor RPS using the configured gear ratio.
         double motorRPS = wheelRPS * ShooterConstants.GEAR_RATIO;
         shooterMotor1.setControl(new VelocityVoltage(motorRPS));
+    }
+
+    public Command fullSpeed(){
+        return Commands.deadline(
+            runEnd(() -> setShooterSpeed(1.0), () -> setShooterSpeed(0.0)),
+            m_indexer.manualIndexerCommand());
     }
 
     /**

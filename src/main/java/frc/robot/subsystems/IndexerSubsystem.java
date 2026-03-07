@@ -50,21 +50,24 @@ public class IndexerSubsystem extends SubsystemBase {
      * @return command that allows manual control of the indexer motor.
      */
     public Command manualIndexerCommand() {
-        return run(() -> {
+        return runEnd(() -> {
             // Read the mech controller right-stick Y axis for manual indexer speed control.
-            double yAxisJoystickValue = Utils.deadbandReturn(RobotContainer.mechXbox.getRightY(), 0.1);
+            //double yAxisJoystickValue = Utils.deadbandReturn(RobotContainer.mechXbox.getRightY(), 0.1);
+
+            //System.out.println("Indexer joystick value: " + yAxisJoystickValue); // Debugging output to verify joystick input
+            double yAxisJoystickValue = 1.0;
 
             if (yAxisJoystickValue > 0) {
                 // Positive stick input feeds forward.
-                setIndexerSpeed(yAxisJoystickValue / 4);
+                setIndexerSpeed(yAxisJoystickValue);
             } else if (yAxisJoystickValue < 0) {
                 // Negative stick input reverses feed direction.
-                setIndexerSpeed(yAxisJoystickValue / 4);
+                setIndexerSpeed(yAxisJoystickValue);
             } else {
                 // No input after deadband, so stop the indexer.
                 setIndexerSpeed(0);
             }
-        });
+        }, () -> setIndexerSpeed(0)); // Ensure the indexer motor stops when the command ends or is interrupted.
     }
 
     /**

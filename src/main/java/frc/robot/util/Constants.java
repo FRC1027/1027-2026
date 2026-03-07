@@ -50,13 +50,13 @@ public final class Constants {
     public static final double SHOOTER_POWER = 0.6;
 
     /** CAN ID for the primary shooter motor. */
-    public static final int SHOOTER_MOTOR_ID1 = 0;
+    public static final int SHOOTER_MOTOR_ID1 = 39;
 
     /** CAN ID for the follower shooter motor. */
-    public static final int SHOOTER_MOTOR_ID2 = 0;
+    public static final int SHOOTER_MOTOR_ID2 = 1;
 
     /** Gear ratio from motor to shooter wheel (motor rotations per wheel rotation). */
-    public static final double GEAR_RATIO = 1.0; // Expected to be ~3:1 according to Rob
+    public static final double GEAR_RATIO = 1.0;
 
     /** Minimum valid distance to the target (in meters) used to clamp Limelight-derived values. */
     public static final double MINIMUM_DISTANCE = Units.inchesToMeters(31.5); // 90 inches to meters
@@ -105,7 +105,7 @@ public final class Constants {
     private ClimbConstants() {} // Prevent instantiation
 
     /** CAN ID for the climb motor. */
-    public static final int CLIMB_MOTOR_ID = 0;
+    public static final int CLIMB_MOTOR_ID = 2;
 
     /** Sensor-to-mechanism ratio (motor rotations per mechanism rotation). */
     public static final double CLIMB_SENSOR_TO_MECHANISM_RATIO = 1.0;
@@ -171,10 +171,10 @@ public final class Constants {
     private HopperConstants() {} // Prevent instantiation
 
     /** CAN ID for the primary hopper motor. */
-    public static final int HOPPER_MOTOR_ID1 = 0;
+    public static final int HOPPER_MOTOR_ID1 = 51;
 
     /** CAN ID for the follower hopper motor. */
-    public static final int HOPPER_MOTOR_ID2 = 0;
+    public static final int HOPPER_MOTOR_ID2 = 52;
 
     /** Hopper extension length in meters. */
     public static final double HOPPER_EXTENTION_LENGTH = Units.inchesToMeters(0); // MEASURE THIS
@@ -186,10 +186,10 @@ public final class Constants {
     private IntakeConstants() {} // Prevent instantiation
 
     /** CAN ID for the back intake motor. */
-    public static final int BACK_INTAKE_MOTOR_ID = 0;
+    public static final int BACK_INTAKE_MOTOR_ID = 5;
 
     /** CAN ID for the front intake motor. */
-    public static final int FRONT_INTAKE_MOTOR_ID = 0;
+    public static final int FRONT_INTAKE_MOTOR_ID = 9;
   }
 
   /* ================= Object Recognition ================= */
@@ -213,7 +213,7 @@ public final class Constants {
     private IndexerConstants() {} // Prevent instantiation
 
     /** CAN ID for the indexer motor. */
-    public static final int INDEXER_MOTOR_ID = 0;
+    public static final int INDEXER_MOTOR_ID = 28;
   }
 
   /* ================= Drivebase ================= */

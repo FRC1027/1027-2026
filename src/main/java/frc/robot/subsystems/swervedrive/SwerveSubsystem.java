@@ -126,13 +126,13 @@ public class SwerveSubsystem extends SubsystemBase
     LimelightHelpers.SetRobotOrientation("limelight", swerveDrive.imuReadingCache.getValue().getZ(), 0, 0, 0, 0, 0);
     LimelightHelpers.PoseEstimate limelightMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
 
-    try {
-      if(limelightMeasurement.tagCount > 0){
-        swerveDrive.addVisionMeasurement(limelightMeasurement.pose, limelightMeasurement.timestampSeconds, VecBuilder.fill(.7,.7,9999999));
-      }
-    } catch (Exception e) {
-      System.out.println(e);
-    }
+    // try {
+    //   if(limelightMeasurement.tagCount > 0){
+    //     swerveDrive.addVisionMeasurement(limelightMeasurement.pose, limelightMeasurement.timestampSeconds, VecBuilder.fill(.7,.7,9999999));
+    //   }
+    // } catch (Exception e) {
+    //   System.out.println(e);
+    // }
   }
 
   @Override

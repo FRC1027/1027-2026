@@ -131,7 +131,7 @@ public class DriveTowardTargetCommand extends Command {
         // Reset detection state to avoid stale data from previous runs.
         currentState.clear();
 
-        SmartDashboard.putString("LL Status", "Searching for target...");
+        SmartDashboard.putString("LL Status/Error Type", "Searching for target...");
     }
 
     @Override
@@ -144,7 +144,7 @@ public class DriveTowardTargetCommand extends Command {
             // 1) Validate that a fiducial ID is currently detected.
             double fid = LimelightHelpers.getFiducialID(ObjectRecognitionConstants.LIMELIGHT_NAME);
             if (Double.isNaN(fid) || fid < 0.0) {
-                SmartDashboard.putString("LL Status", "Tag ID not found");
+                SmartDashboard.putString("LL Status/Error Type", "Tag ID not found");
                 currentState.clear();
                 stopRobot();
                 return;
@@ -157,7 +157,7 @@ public class DriveTowardTargetCommand extends Command {
 
             // 1) Ensure at least one neural-network detection is available.
             if (results.targets_Detector == null || results.targets_Detector.length == 0) {
-                SmartDashboard.putString("LL Status", "No object visible");
+                SmartDashboard.putString("LL Status/Error Type", "No object visible");
                 currentState.clear();
                 stopRobot();
                 return;
@@ -174,7 +174,7 @@ public class DriveTowardTargetCommand extends Command {
         // 2) Check the "tv" flag for target validity.
         double tv = limelight.getEntry("tv").getDouble(0.0);
         if (tv < 1.0) {
-            SmartDashboard.putString("LL Status", "No target visible");
+            SmartDashboard.putString("LL Status/Error Type", "No target visible");
             currentState.clear();
             stopRobot();
             return;
@@ -183,7 +183,7 @@ public class DriveTowardTargetCommand extends Command {
         // 3) Read target pose relative to the Limelight camera.
         double[] pose = limelight.getEntry("targetpose_cameraspace").getDoubleArray(new double[0]);
         if (pose == null || pose.length < 3) {
-            SmartDashboard.putString("LL Status", "Invalid pose data");
+            SmartDashboard.putString("LL Status/Error Type", "Invalid pose data");
             currentState.clear();
             stopRobot();
             return;
@@ -199,7 +199,7 @@ public class DriveTowardTargetCommand extends Command {
         // Update SmartDashboard for debugging
         SmartDashboard.putNumber("LL tx (m)", tx);
         SmartDashboard.putNumber("LL bumper->target (m)", currentState.distance);
-        SmartDashboard.putString("LL Status", "Target Locked");
+        SmartDashboard.putString("LL Status/Error Type", "Target Locked");
 
         // --- CONTROL LOGIC ---
 
@@ -232,7 +232,7 @@ public class DriveTowardTargetCommand extends Command {
     public void end(boolean interrupted) {
         // Runs when the command finishes or is interrupted.
         stopRobot();
-        SmartDashboard.putString("LL Status", interrupted ? "Interrupted" : "Arrived at Target");
+        SmartDashboard.putString("LL Status/Error Type", interrupted ? "Interrupted" : "Arrived at Target");
         System.out.println("[DriveTowardTarget] Ended");
     }
 

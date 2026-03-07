@@ -145,18 +145,19 @@ public class RobotContainer {
     // Initialize the AlignTagCommand (Align Only Mode - MaxSpeed = 0) ** Only uses AprilTag detection, not object detection **
     m_AlignTagCommand = new DriveTowardTargetCommand(drivebase, 0.0, 2.0, m_hopper);
 
-    // Initialize the SendableChooser that adds all of the PathPlanner Autos to the dashboard
-    m_chooser = AutoBuilder.buildAutoChooser();
-    SmartDashboard.putData("Auto Chooser", m_chooser);
-
     /**
      * Register NamedCommands for use in PathPlanner autonomous paths here. This allows the commands to be
      * referenced by name in the PathPlanner interface when creating autonomous routines.
      */
-    NamedCommands.registerCommand("shootCommand", m_shooter.shoot());
-    NamedCommands.registerCommand("shootAlignCommand", m_shooter.shootAlign(drivebase));
-    NamedCommands.registerCommand("enlargeHopperCommand", m_hopper.hopperEnlarger2000Command());
-    NamedCommands.registerCommand("driveTowardGamePieceCommand", m_DriveTowardGamePieceCommand);
+    NamedCommands.registerCommand("Shoot", m_shooter.shoot()); // Adds the shoot command as a named command for use in PathPlanner paths
+    NamedCommands.registerCommand("ShootAlign", m_shooter.shootAlign(drivebase)); // Adds the shootAlign command as a named command for use in PathPlanner paths
+    NamedCommands.registerCommand("Intake", m_intake.continuousIntakeCommand()); // Adds the intake command as a named command, for use in PathPlanner paths
+    NamedCommands.registerCommand("HopperExpand/Retract", m_hopper.hopperEnlarger2000Command()); // Adds the hopperEnlarger2000Command as a named command for use in PathPlanner paths
+    NamedCommands.registerCommand("DriveToGamePiece", m_DriveTowardGamePieceCommand); // Adds the driveTowardGamePieceCommand as a named command for use in PathPlanner paths
+
+    // Initialize the SendableChooser that adds all of the PathPlanner Autos to the dashboard
+    m_chooser = AutoBuilder.buildAutoChooser();
+    SmartDashboard.putData("Auto Chooser", m_chooser);
 
     // Call the configureBindings() method to set up the trigger bindings for the robot's controls.
     configureBindings();
@@ -190,7 +191,7 @@ public class RobotContainer {
 
     /* ================= Mechanism Control Bindings ================= */
 
-    // Controls the hooper with the mechXbox bumpers
+    // Controls the hopper with the mechXbox bumpers
     mechXbox.rightBumper().whileTrue(m_hopper.manualHopperControl());
     mechXbox.leftBumper().whileTrue(m_hopper.manualHopperControl());
 
@@ -205,10 +206,12 @@ public class RobotContainer {
     mechXbox.x().onTrue(m_intake.continuousIntakeCommand());
 
     // Controls the shooter with the `y` button on the mechXbox
-    mechXbox.y().onTrue(m_shooter.shoot());
+    mechXbox.y().whileTrue(m_shooter.fullSpeed());
 
     // Controls the shooter to align and shoot at a target tag with the `b` button on the mechXbox
-    mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
+    //mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
+
+    mechXbox.b().whileTrue(m_indexer.manualIndexerCommand());
 
     /* ================= Driver Control Bindings ================= */
 
