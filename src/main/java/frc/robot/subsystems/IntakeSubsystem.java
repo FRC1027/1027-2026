@@ -23,13 +23,10 @@ public class IntakeSubsystem extends SubsystemBase {
     // Boolean supplier to check if the hopper is enlarged, allowing for coordinated control between subsystems.
     private final BooleanSupplier isHopperEnlarged;
 
-    // Back intake motor
-    private final SparkMax backIntakeMotor;
+    // Intake motor
+    private final SparkMax intakeMotor;
 
-    // Front intake motor
-    private final SparkMax frontIntakeMotor;
-
-    // Motor configuration for both intake motors
+    // Motor configuration for the intake motors
     public static final SparkMaxConfig intakeConfig = new SparkMaxConfig();
 
     static {
@@ -48,21 +45,11 @@ public class IntakeSubsystem extends SubsystemBase {
         // Store the BooleanSupplier for checking hopper state, enabling dynamic response to hopper enlargement.
         this.isHopperEnlarged = isHopperEnlarged;
 
-        // Initialize the intake motors using configured CAN IDs.
-        backIntakeMotor = new SparkMax(IntakeConstants.BACK_INTAKE_MOTOR_ID, MotorType.kBrushless);
-        frontIntakeMotor = new SparkMax(IntakeConstants.FRONT_INTAKE_MOTOR_ID, MotorType.kBrushless);
+        // Initialize the intake motor using configured CAN ID.
+        intakeMotor = new SparkMax(IntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
 
-        // Configure the back intake motor with the shared configuration, using safe parameter reset and persistent parameter storage.
-        backIntakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-        // Configure follower behavior, such that the front intake motor follows the back intake motor with inverted direction.
-        SparkMaxConfig intakeFrontConfig = new SparkMaxConfig();
-        intakeFrontConfig
-            .apply(intakeConfig) // Apply the same base configuration to the front intake motor.
-            .follow(backIntakeMotor, true); // true = invert follower direction
-        
-        // Configure the front intake motor with the follower configuration, ensuring it mirrors the back intake motor's behavior in an inverted manner.
-        frontIntakeMotor.configure(intakeFrontConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        // Configure the intake motor with the shared configuration, using safe parameter reset and persistent parameter storage.
+        intakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     /**
@@ -72,7 +59,7 @@ public class IntakeSubsystem extends SubsystemBase {
      * No Trigger: Stops the motor.
      */
     public Command manualIntakeCommand() {
-        return run(() -> {
+        return runEnd(() -> {
             if (isHopperEnlarged.getAsBoolean()) {
                 double rightTrigger = Utils.deadbandReturn(RobotContainer.mechXbox.getRightTriggerAxis(), 0.1);
                 double leftTrigger = -Utils.deadbandReturn(RobotContainer.mechXbox.getLeftTriggerAxis(), 0.1);
@@ -91,7 +78,7 @@ public class IntakeSubsystem extends SubsystemBase {
                 // If the hopper is not enlarged, stop the intake motor regardless of trigger input to prevent unintended behavior.
                 setIntakeSpeed(0.0);
             }
-        });
+        }, () -> setIntakeSpeed(0.0));
     }
 
     /**
@@ -100,20 +87,18 @@ public class IntakeSubsystem extends SubsystemBase {
      * and hopper subsystems based on the hopper's state.
      */
     public Command continuousIntakeCommand() { //
-        return run(() -> {
-            if (isHopperEnlarged.getAsBoolean()) {
-                setIntakeSpeed(0.5); // Run intake at 50% output while hopper is enlarged.
-            } else {
-                setIntakeSpeed(0.0); // Stop intake when hopper is not enlarged.
-            }
-        });
+        return runEnd(
+            () -> setIntakeSpeed(0.5), // Run intake at 50% output while hopper is enlarged.
+            () -> setIntakeSpeed(0.0) // Stop intake when command is interupted
+        ).onlyWhile(isHopperEnlarged); // If the hopper begins to close while the intake is running, the intake command stops
     }
 
     /**
      * Sets the speed of the intake motor.
+     * 
      * @param speed The speed to set the motor to (between -1.0 and 1.0).
      */
     public void setIntakeSpeed(double speed) {
-        backIntakeMotor.set(speed);
+        intakeMotor.set(speed);
     }
 }

@@ -52,21 +52,9 @@ public class IndexerSubsystem extends SubsystemBase {
     public Command manualIndexerCommand() {
         return runEnd(() -> {
             // Read the mech controller right-stick Y axis for manual indexer speed control.
-            //double yAxisJoystickValue = Utils.deadbandReturn(RobotContainer.mechXbox.getRightY(), 0.1);
-
-            //System.out.println("Indexer joystick value: " + yAxisJoystickValue); // Debugging output to verify joystick input
-            double yAxisJoystickValue = 1.0;
-
-            if (yAxisJoystickValue > 0) {
-                // Positive stick input feeds forward.
-                setIndexerSpeed(yAxisJoystickValue);
-            } else if (yAxisJoystickValue < 0) {
-                // Negative stick input reverses feed direction.
-                setIndexerSpeed(yAxisJoystickValue);
-            } else {
-                // No input after deadband, so stop the indexer.
-                setIndexerSpeed(0);
-            }
+            double yAxisJoystickValue = Utils.deadbandReturn(RobotContainer.mechXbox.getRightY(), 0.1);
+            
+            setIndexerSpeed(yAxisJoystickValue);
         }, () -> setIndexerSpeed(0)); // Ensure the indexer motor stops when the command ends or is interrupted.
     }
 
@@ -79,11 +67,10 @@ public class IndexerSubsystem extends SubsystemBase {
      * @return command that leaves the indexer stopped and forces zero output on end/interruption
      */
     public Command runIndexerCommand() {
-        return runEnd(
-            () -> Commands.waitSeconds(3.0) // Delays the start of the indexer by a set time interval
-                    .andThen(() -> setIndexerSpeed(0.5)),
-            () -> setIndexerSpeed(0.0) // Ensure indexer is stopped when this command ends or is interrupted.
-        );
+        return Commands.sequence(
+            Commands.waitSeconds(3.0), // Delays the start of the indexer by a set time interval
+            run(() -> setIndexerSpeed(1.0))
+        ).finallyDo(interrupted -> setIndexerSpeed(0.0)); // Ensure indexer is stopped when this command ends or is interrupted.
     }
 
     /**

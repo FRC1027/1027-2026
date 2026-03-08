@@ -18,12 +18,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.commands.DriveTowardTargetCommand;
 import frc.robot.commands.LockWheelsCommand;
-import frc.robot.RobotContainer;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.ShooterConstants;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
-import frc.robot.util.Utils;
 
 import java.util.Collections;
 
@@ -130,31 +128,6 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
-     * This method allows the driver to control the shooter motor manually.
-     * 
-     * Left Trigger: Intakes (negative speed).
-     * Right Trigger: Shoots out (positive speed).
-     * No Trigger: Stops the motor.
-     */
-    public Command manualShootCommand() {
-        return run(() -> {
-            double rightTrigger = Utils.deadbandReturn(RobotContainer.driverXbox.getRightTriggerAxis(), 0.1);
-            double leftTrigger = -Utils.deadbandReturn(RobotContainer.driverXbox.getLeftTriggerAxis(), 0.1);
-
-            if (rightTrigger > 0.0){
-                // Scale trigger input after applying deadband for smooth manual shooting control.
-                setShooterSpeed(rightTrigger / 4);
-            } else if (leftTrigger < 0.0){
-                // Scale trigger input after applying deadband for smooth manual intake control.
-                setShooterSpeed(leftTrigger / 4);
-            } else {
-                // No trigger input: stop the shooter motor.
-                setShooterSpeed(0.0);
-            }
-        });
-    }
-
-    /**
      * Aligns the robot to the target tag and shoots if the tag ID is valid.
      * Valid tag IDs are in front of Red Hub (9 or 10), in front of Blue Hub (25 or 26), or 4 for testing in the RCH.
      * 
@@ -193,6 +166,15 @@ public class ShooterSubsystem extends SubsystemBase {
         );
     }
 
+    // Method used for shooter testing to run the indexer and shooter at full speed without Limelight distance calculation
+    public Command fullSpeed(){
+        return Commands.deadline(
+            runEnd(
+                () -> setShooterSpeed(1.0), 
+                () -> setShooterSpeed(0.0)),
+            m_indexer.runIndexerCommand());
+    }
+
     /**
      * Sets the shooter motor to a RPS calculated via relevant data from Limelight.
      */
@@ -208,12 +190,6 @@ public class ShooterSubsystem extends SubsystemBase {
         // Convert wheel RPS to motor RPS using the configured gear ratio.
         double motorRPS = wheelRPS * ShooterConstants.GEAR_RATIO;
         shooterMotor1.setControl(new VelocityVoltage(motorRPS));
-    }
-
-    public Command fullSpeed(){
-        return Commands.deadline(
-            runEnd(() -> setShooterSpeed(1.0), () -> setShooterSpeed(0.0)),
-            m_indexer.manualIndexerCommand());
     }
 
     /**

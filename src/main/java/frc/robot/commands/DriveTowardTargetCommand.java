@@ -238,19 +238,22 @@ public class DriveTowardTargetCommand extends Command {
 
     @Override
     public boolean isFinished() {
-        // Check if we should stop automatically based on target visibility and distance
+        // Rotation tolerance for considering the robot aligned
+        final double ROTATION_TOLERANCE = 0.05; // radians, adjust as needed
 
-        // 1) If we do not currently have a target, stop and let the driver re-trigger.
+        // 1) If we do not currently have a target, stop and let the driver re-trigger
         if (!currentState.hasTarget) {
             return true;
         }
 
-        // 2) In drive mode, finish once we reach the stop distance.
-        boolean reachedTarget = (maxSpeed > 0) && (currentState.distance <= STOP_DISTANCE);
+        // 2) In drive mode (maxSpeed > 0), finish once we reach the stop distance
+        boolean reachedDistanceTarget = (maxSpeed > 0) && (currentState.distance <= STOP_DISTANCE);
 
-        // Note: In align-only mode (maxSpeed == 0), this command does not auto-finish on distance.
+        // 3) Finish if aligned within rotation tolerance (align-only mode or while driving)
+        boolean alignedTarget = Math.abs(tx) <= ROTATION_TOLERANCE;
 
-        return reachedTarget;
+        // Command finishes if either we’ve reached distance OR we are aligned
+        return reachedDistanceTarget || alignedTarget;
     }
 
     /**

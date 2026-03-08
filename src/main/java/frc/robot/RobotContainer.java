@@ -191,27 +191,27 @@ public class RobotContainer {
 
     /* ================= Mechanism Control Bindings ================= */
 
-    // Controls the hopper with the mechXbox bumpers
+    // Controls the hopper with the mechXbox bumpers (WILL NOT BE USED IN COMPITITION)
     mechXbox.rightBumper().whileTrue(m_hopper.manualHopperControl());
     mechXbox.leftBumper().whileTrue(m_hopper.manualHopperControl());
+
+    // Controls the indexer with the right mechXbox joystick (WILL NOT BE USED IN COMPITITION)
+    new Trigger(
+      () -> Math.abs(mechXbox.getRightY()) > 0.1)
+      .whileTrue(m_indexer.manualIndexerCommand());
+
+    // Controls the intake with the mechXbox triggers (WILL NOT BE USED IN COMPITITION)
+    mechXbox.rightTrigger(0.1).whileTrue(m_intake.manualIntakeCommand());
+    mechXbox.leftTrigger(0.1).whileTrue(m_intake.manualIntakeCommand());
 
     // Controls the enlargment/retraction of the hopper with the `a` button on the mechXbox
     mechXbox.a().onTrue(m_hopper.hopperEnlarger2000Command());
 
-    // Controls the intake with the mechXbox triggers with a custom threshold for better responsiveness.
-    mechXbox.rightTrigger(0.1).whileTrue(m_intake.manualIntakeCommand());
-    mechXbox.leftTrigger(0.1).whileTrue(m_intake.manualIntakeCommand());
-
-    // Controls the intake to run continuously via the `x` button (toggle-controlled), only while the hopper is enlarged.
-    mechXbox.x().onTrue(m_intake.continuousIntakeCommand());
+    // Controls the intake to run continuously via the `x` button, only while the hopper is enlarged.
+    mechXbox.x().toggleOnTrue(m_intake.continuousIntakeCommand());
 
     // Controls the shooter with the `y` button on the mechXbox
-    mechXbox.y().whileTrue(m_shooter.fullSpeed());
-
-    // Controls the shooter to align and shoot at a target tag with the `b` button on the mechXbox
-    //mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
-
-    mechXbox.b().whileTrue(m_indexer.manualIndexerCommand());
+    mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
 
     /* ================= Driver Control Bindings ================= */
 

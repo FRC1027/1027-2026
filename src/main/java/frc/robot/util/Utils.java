@@ -54,10 +54,10 @@ public final class Utils {
 
     // If the hopper is extended, subtract the extension length from the distance.
     if (isHopperExtended) {
-      cameraToTag -= HopperConstants.HOPPER_EXTENTION_LENGTH;
+      cameraToTag += HopperConstants.HOPPER_EXTENTION_LENGTH;
     }
 
     // Convert camera-to-tag to bumper-to-tag by subtracting the camera offset.
-    return Math.max(0.0, cameraToTag - RobotProperties.CAM_TO_BUMPER_DISTANCE);
+    return Math.max(0.0, cameraToTag + RobotProperties.CAM_TO_SHOOTER_DISTANCE);
   }
 }

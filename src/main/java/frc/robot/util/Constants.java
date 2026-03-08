@@ -38,16 +38,13 @@ public final class Constants {
     public static final double MAX_SPEED = Units.feetToMeters(14.5);
 
     /** Distance from the camera to the front bumper in meters. */
-    public static final double CAM_TO_BUMPER_DISTANCE = 0.33;
+    public static final double CAM_TO_SHOOTER_DISTANCE = 0.33; // UPDATE THIS VALUE
   }
 
   /* ================= Shooter ================= */
 
   public static final class ShooterConstants {
     private ShooterConstants() {} // Prevent instantiation
-
-    /** Manual percent output command in the range [-1.0, 1.0]. */
-    public static final double SHOOTER_POWER = 0.6;
 
     /** CAN ID for the primary shooter motor. */
     public static final int SHOOTER_MOTOR_ID1 = 39;
@@ -177,7 +174,7 @@ public final class Constants {
     public static final int HOPPER_MOTOR_ID2 = 52;
 
     /** Hopper extension length in meters. */
-    public static final double HOPPER_EXTENTION_LENGTH = Units.inchesToMeters(0); // MEASURE THIS
+    public static final double HOPPER_EXTENTION_LENGTH = Units.inchesToMeters(12); // MEASURE THIS
   }
 
   /* ================= Intake ================= */
@@ -186,10 +183,7 @@ public final class Constants {
     private IntakeConstants() {} // Prevent instantiation
 
     /** CAN ID for the back intake motor. */
-    public static final int BACK_INTAKE_MOTOR_ID = 5;
-
-    /** CAN ID for the front intake motor. */
-    public static final int FRONT_INTAKE_MOTOR_ID = 9;
+    public static final int INTAKE_MOTOR_ID = 5;
   }
 
   /* ================= Object Recognition ================= */
@@ -237,7 +231,7 @@ public final class Constants {
     public static final double TURN_CONSTANT = 6.0;
   }
 
-  /* ================= Turret ================= */
+	/* ================= Turret ================= */
 
   public static final class TurretConstants {
     private TurretConstants() {} // Prevent instantiation
