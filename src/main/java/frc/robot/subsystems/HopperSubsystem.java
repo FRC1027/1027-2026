@@ -1,7 +1,11 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -18,31 +22,39 @@ import java.util.Set;
  * Motor 1 acts as leader; Motor 2 follows Motor 1.
  */
 public class HopperSubsystem extends SubsystemBase {
-    // Primary hopper motor controller.
-    private final TalonSRX hopperMotor1; //left
-
-    // Secondary hopper motor controller.
-    private final TalonSRX hopperMotor2; //right
-
     // Boolean to indicate whether the hopper is currently expanded, for use in state management.
     private boolean hopperEnlarged;
 
+    // Hopper motor.
+    private final SparkMax hopperMotor;
+
+    // Motor configuration for the hopper motor.
+    public static final SparkMaxConfig hopperConfig = new SparkMaxConfig();
+
+    static {
+        hopperConfig
+            .idleMode(IdleMode.kBrake)
+            .smartCurrentLimit(50);
+    }
+
     /**
-     * Creates the hopper subsystem, configures both TalonSRX motors, and
-     * sets up the follower relationship for the second motor.
+     * Creates the hopper subsystem and configures the SparkMax motor.
      */
+    @SuppressWarnings("removal") // Suppress warnings about deprecated ResetMode and PersistMode usage in SparkMax configuration.
     public HopperSubsystem() {
         // Default to not enlarged state on initialization; the hopper starts in its normal configuration.
         hopperEnlarged = false;
 
-        // Initialize hopper motors using configured CAN IDs.
-        hopperMotor1 = new TalonSRX(HopperConstants.HOPPER_MOTOR_ID1);
-        hopperMotor2 = new TalonSRX(HopperConstants.HOPPER_MOTOR_ID2);
+        // Initialize the hopper motor using configured CAN ID.
+        hopperMotor = new SparkMax(HopperConstants.HOPPER_MOTOR_ID1, MotorType.kBrushless);
+
+        // Configure the hopper motor using safe parameter reset and persistent parameter storage.
+        hopperMotor.configure(hopperConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     /**
      * Manual hopper control using driver bumpers:
-     * right bumper feeds forward, left bumper reverses, neither stops.
+     * Right bumper expands the hopper, left bumper retracts the bumper, neither stops.
      * 
      * KNOWN ISSUE: This command does not update the hopperEnlarged state variable.
      */
@@ -63,22 +75,22 @@ public class HopperSubsystem extends SubsystemBase {
 
     /**
      * Enlarges or retracts the hopper based on its current state. If the hopper is not enlarged, 
-     * it will run the motors to enlarge it; if it is already enlarged, it will run the motors in 
+     * it will run the motor to enlarge it; if it is already enlarged, it will run the motor in 
      * reverse to retract it.
      */
     public Command hopperEnlarger2000Command() {
         return Commands.defer(() -> {
             if (!hopperEnlarged) {
-            // Example: run the hopper at 10% speed for 2 seconds to fully enlarge (tuning is required)
-                return run(() -> setHopperSpeed(0.1))
+            // Example: run the hopper at 50% speed for 2 seconds to fully enlarge (tuning is required)
+                return run(() -> setHopperSpeed(0.5))
                         .withTimeout(2.0) // Time how long it takes to fully extend the hopper with a known speed
                         .finallyDo(() -> {
                             setHopperSpeed(0.0);
                             hopperEnlarged = true;
                         });
             } else {
-            // Example: run the hopper at 10% speed for 2 seconds to fully enlarge (tuning is required)
-                return run(() -> setHopperSpeed(-0.1))
+            // Example: run the hopper at 50% speed for 2 seconds to fully enlarge (tuning is required)
+                return run(() -> setHopperSpeed(-0.5))
                         .withTimeout(2.0) // Time how long it takes to fully retract the hopper with a known speed
                         .finallyDo(() -> {
                             setHopperSpeed(0.0);
@@ -89,13 +101,12 @@ public class HopperSubsystem extends SubsystemBase {
     }
 
     /**
-     * Sets hopper leader motor output in the [-1, 1] range.
+     * Sets hopper motor output in the [-1, 1] range.
      *
      * @param speed motor output percent (sign controls direction)
      */
     public void setHopperSpeed(double speed) {
-        hopperMotor1.set(TalonSRXControlMode.PercentOutput, speed); // Set the speed of the primary hopper motor
-        hopperMotor2.set(TalonSRXControlMode.PercentOutput, -speed); // Set the speed of the secondary hopper motor
+        hopperMotor.set(speed); // Set the speed of the hopper motor
     }
 
     /**

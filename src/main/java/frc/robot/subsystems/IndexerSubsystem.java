@@ -40,7 +40,7 @@ public class IndexerSubsystem extends SubsystemBase {
         // Initialize the indexer motor using configured CAN ID.
         indexerMotor = new SparkMax(IndexerConstants.INDEXER_MOTOR_ID, MotorType.kBrushless);
 
-        // Configure the indexer motor with the shared configuration, using safe parameter reset and persistent parameter storage.
+        // Configure the indexer motor using safe parameter reset and persistent parameter storage.
         indexerMotor.configure(indexerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 

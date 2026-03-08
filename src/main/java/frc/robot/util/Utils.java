@@ -52,12 +52,15 @@ public final class Utils {
     // Compute planar distance from camera to tag using X/Z components.
     double cameraToTag = Math.sqrt(tx * tx + tz * tz);
 
-    // If the hopper is extended, subtract the extension length from the distance.
+    // If the hopper is extended, add the extension length to the distance.
     if (isHopperExtended) {
       cameraToTag += HopperConstants.HOPPER_EXTENTION_LENGTH;
     }
 
-    // Convert camera-to-tag to bumper-to-tag by subtracting the camera offset.
-    return Math.max(0.0, cameraToTag + RobotProperties.CAM_TO_SHOOTER_DISTANCE);
+    // Convert from camera distance to shooter distance
+    double shooterToTag = cameraToTag + RobotProperties.CAM_TO_SHOOTER_DISTANCE;
+
+    // Return the distance from the shooter to the AprilTag.
+    return Math.max(0.0, shooterToTag);
   }
 }
