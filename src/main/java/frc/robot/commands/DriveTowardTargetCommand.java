@@ -5,7 +5,6 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.HopperSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
@@ -49,9 +48,6 @@ public class DriveTowardTargetCommand extends Command {
     // Limelight NetworkTable used to fetch pose/target state values for control.
     private final NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
-    // Reference to the HopperSubsystem to check hopper extension state for distance calculations.
-    private final HopperSubsystem m_hopper;
-
     // Instance of the SwerveSubsystem to control the robot's movement
     private final SwerveSubsystem drivebase;
 
@@ -83,11 +79,10 @@ public class DriveTowardTargetCommand extends Command {
      * @param maxSpeed    The maximum forward speed in meters per second. Set to 0 for align-only.
      * @param maxRotation The maximum rotation speed in radians per second.
      */
-    public DriveTowardTargetCommand(SwerveSubsystem drivebase, double maxSpeed, double maxRotation, HopperSubsystem m_hopper) {
+    public DriveTowardTargetCommand(SwerveSubsystem drivebase, double maxSpeed, double maxRotation) {
         this.drivebase = drivebase;
         this.maxSpeed = maxSpeed;
         this.maxRotation = maxRotation;
-        this.m_hopper = m_hopper;
 
         // Require the drivebase so no other drive commands run at the same time
         addRequirements(drivebase);
@@ -100,12 +95,11 @@ public class DriveTowardTargetCommand extends Command {
      * @param drivebase      The swerve drive subsystem.
      * @param detectAprilTag If true, uses AprilTag detection; if false, uses object detection.
      */
-    public DriveTowardTargetCommand(SwerveSubsystem drivebase, boolean detectAprilTag, HopperSubsystem m_hopper) {
+    public DriveTowardTargetCommand(SwerveSubsystem drivebase, boolean detectAprilTag) {
         this.drivebase = drivebase;
         this.maxSpeed = 2.0;
         this.maxRotation = 2.0;
         this.detectAprilTag = detectAprilTag;
-        this.m_hopper = m_hopper;
 
         if (!detectAprilTag) {
             // If using object detection, we want to use a closer stop distance since we want to be right on top of the game piece to pick it up.
@@ -193,7 +187,7 @@ public class DriveTowardTargetCommand extends Command {
         tx = pose[0]; // Horizontal offset (left/right) in meters.
 
         // Calculate bumper-to-target distance from Limelight pose data.
-        currentState.distance = Utils.calculateDistanceToTarget(limelight, m_hopper.getHopperEnlarged());
+        currentState.distance = Utils.calculateDistanceToTarget(limelight);
         currentState.hasTarget = true;
 
         // Update SmartDashboard for debugging

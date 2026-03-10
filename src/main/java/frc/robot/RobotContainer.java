@@ -134,16 +134,16 @@ public class RobotContainer {
     m_indexer = new IndexerSubsystem();
 
     // Initialize the ShooterSubsystem
-    m_shooter = new ShooterSubsystem(m_indexer, m_hopper);
+    m_shooter = new ShooterSubsystem(m_indexer);
 
     // Initialize the DriveTowardTagCommand (Drive Mode) ** Uses AprilTag detection **
-    m_DriveTowardTagCommand = new DriveTowardTargetCommand(drivebase, true, m_hopper);
+    m_DriveTowardTagCommand = new DriveTowardTargetCommand(drivebase, true);
 
     // Initialize the DriveTowardGamePieceCommand (Drive Mode) ** Uses object detection **
-    m_DriveTowardGamePieceCommand = new DriveTowardTargetCommand(drivebase, false, m_hopper);
+    m_DriveTowardGamePieceCommand = new DriveTowardTargetCommand(drivebase, false);
 
     // Initialize the AlignTagCommand (Align Only Mode - MaxSpeed = 0) ** Only uses AprilTag detection, not object detection **
-    m_AlignTagCommand = new DriveTowardTargetCommand(drivebase, 0.0, 2.0, m_hopper);
+    m_AlignTagCommand = new DriveTowardTargetCommand(drivebase, 0.0, 2.0);
 
     /**
      * Register NamedCommands for use in PathPlanner autonomous paths here. This allows the commands to be
