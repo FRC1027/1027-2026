@@ -164,16 +164,4 @@ public final class Constants {
     /** Scalar applied to turning input for driver feel. */
     public static final double TURN_CONSTANT = 6.0;
   }
-
-	/* ================= Turret ================= */
-
-  public static final class TurretConstants {
-    private TurretConstants() {} // Prevent instantiation
-
-    /** Maximum turret speed command in the range [-1.0, 1.0]. */
-    public static final double MAX_TURRET_SPEED = 0.5; // Runtime code should clamp to [-0.5, 0.5].
-
-    /** CAN ID for the turret motor. */
-    public static final int TURRET_MOTOR_ID = 23;
-  }
 }
