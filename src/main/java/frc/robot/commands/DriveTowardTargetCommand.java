@@ -10,7 +10,7 @@ import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.LimelightHelpers.LimelightResults;
-import frc.robot.util.LimelightHelpers.LimelightTarget_Detector;
+//import frc.robot.util.LimelightHelpers.LimelightTarget_Detector;
 import frc.robot.util.Utils;
 
 /**
@@ -27,8 +27,8 @@ public class DriveTowardTargetCommand extends Command {
      * Helper class to store detection state of the detected game piece.
      */
     private static class DetectionState {
-        public String className = ""; // Name of the detected game piece
-        public double confidence = 0.0; // Confidence of the detection
+        //public String className = ""; // Name of the detected game piece
+        //public double confidence = 0.0; // Confidence of the detection
         public double distance = 0.0; // Calculated distance in meters
         public boolean hasTarget = false; // Whether a target was detected
 
@@ -36,8 +36,8 @@ public class DriveTowardTargetCommand extends Command {
          * Clears the detection state.
          */
         public void clear() {
-            className = "";
-            confidence = 0.0;
+            //className = "";
+            //confidence = 0.0;
             distance = 0.0;
             hasTarget = false;
         }
@@ -164,9 +164,9 @@ public class DriveTowardTargetCommand extends Command {
             }
 
             // Store the first detection (typically highest confidence).
-            LimelightTarget_Detector detection = results.targets_Detector[0];
-            currentState.className = detection.className;
-            currentState.confidence = detection.confidence;
+            //LimelightTarget_Detector detection = results.targets_Detector[0];
+            //currentState.className = detection.className;
+            //currentState.confidence = detection.confidence;
         }
 
         // --- SHARED DETECTION LOGIC ---

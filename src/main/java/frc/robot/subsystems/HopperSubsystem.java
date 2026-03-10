@@ -18,8 +18,7 @@ import frc.robot.util.Constants.HopperConstants;
 import java.util.Set;
 
 /**
- * Subsystem that controls hopper motors used to enlarge the holding space for the balls.
- * Motor 1 acts as leader; Motor 2 follows Motor 1.
+ * Subsystem that controls the hopper motor used to enlarge the holding space for the balls.
  */
 public class HopperSubsystem extends SubsystemBase {
     // Boolean to indicate whether the hopper is currently expanded, for use in state management.
@@ -81,20 +80,26 @@ public class HopperSubsystem extends SubsystemBase {
     public Command hopperEnlarger2000Command() {
         return Commands.defer(() -> {
             if (!hopperEnlarged) {
-            // Example: run the hopper at 50% speed for 2 seconds to fully enlarge (tuning is required)
+                System.out.println("State of Hopper: " + hopperEnlarged);
+
+                // Example: run the hopper at 50% speed for 2 seconds to fully enlarge (tuning is required)
                 return run(() -> setHopperSpeed(0.5))
                         .withTimeout(2.0) // Time how long it takes to fully extend the hopper with a known speed
                         .finallyDo(() -> {
                             setHopperSpeed(0.0);
                             hopperEnlarged = true;
+                            System.out.println("State of Hopper: " + hopperEnlarged);
                         });
             } else {
-            // Example: run the hopper at 50% speed for 2 seconds to fully enlarge (tuning is required)
+                System.out.println("State of Hopper: " + hopperEnlarged);
+
+                // Example: run the hopper at 50% speed for 2 seconds to fully enlarge (tuning is required)
                 return run(() -> setHopperSpeed(-0.5))
                         .withTimeout(2.0) // Time how long it takes to fully retract the hopper with a known speed
                         .finallyDo(() -> {
                             setHopperSpeed(0.0);
                             hopperEnlarged = false;
+                            System.out.println("State of Hopper: " + hopperEnlarged);
                         });
             }
         }, Set.of(this));

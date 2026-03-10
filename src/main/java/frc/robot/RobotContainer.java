@@ -210,13 +210,13 @@ public class RobotContainer {
     // Controls the intake to run continuously via the `x` button, only while the hopper is enlarged.
     mechXbox.x().toggleOnTrue(m_intake.continuousIntakeCommand());
 
+    // Controls the shooter to align and shoot at a target tag with the `a` button on the driverXbox
+    mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
+
     // Controls the shooter with the `y` button on the mechXbox
     mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
 
     /* ================= Driver Control Bindings ================= */
-
-    // Controls the shooter to align and shoot at a target tag with the `a` button on the driverXbox
-    driverXbox.a().whileTrue(m_shooter.shootAlign(drivebase));
 
     // Controls the robot to drive and align toward a game piece with the `y` button on the driverXbox
     driverXbox.y().whileTrue(m_DriveTowardGamePieceCommand);

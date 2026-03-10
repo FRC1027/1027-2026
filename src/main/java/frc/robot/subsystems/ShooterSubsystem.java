@@ -23,7 +23,7 @@ import frc.robot.util.Constants.ShooterConstants;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
 
-import java.util.Collections;
+import java.util.Set;
 
 /**
  * Subsystem that controls the shooter flywheels and shot execution commands.
@@ -147,7 +147,7 @@ public class ShooterSubsystem extends SubsystemBase {
             }
             // If no valid tag is seen, return a "do-nothing" command to avoid unintended motion.
             return Commands.none();
-        }, Collections.singleton(this));
+        }, Set.of(this, drivebase));
     }
 
     /**
