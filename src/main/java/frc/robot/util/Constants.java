@@ -50,7 +50,7 @@ public final class Constants {
     public static final int SHOOTER_MOTOR_ID1 = 39;
 
     /** CAN ID for the follower shooter motor. */
-    public static final int SHOOTER_MOTOR_ID2 = 1;
+    public static final int SHOOTER_MOTOR_ID2 = 23;
 
     /** Gear ratio from motor to shooter wheel (motor rotations per wheel rotation). */
     public static final double GEAR_RATIO = 1.0;
