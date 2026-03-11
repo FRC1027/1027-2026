@@ -1,10 +1,10 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
@@ -27,8 +27,8 @@ import frc.robot.util.Utils;
 import java.util.Set;
 
 /**
- * Subsystem that controls the shooter flywheels and shot execution commands.
- */
+ * Subsystem that controls the shooter flywheels and shot execution commands.
+ */
 public class ShooterSubsystem extends SubsystemBase {
     // Limelight NetworkTable used to fetch target 3D pose data.
     private final NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
@@ -42,10 +42,12 @@ public class ShooterSubsystem extends SubsystemBase {
     // Secondary shooter motor controller (follower).
     private final TalonFX shooterMotor2;
 
+    private final StrictFollower followerRequest = new StrictFollower(ShooterConstants.SHOOTER_MOTOR_ID1);
+
     /**
-     * Creates the shooter subsystem, configures TalonFX control gains, and sets up
-     * follower behavior and dashboard tuning entries.
-     */
+    * Creates the shooter subsystem, configures TalonFX control gains, and sets up
+     * follower behavior and dashboard tuning entries.
+     */
     public ShooterSubsystem(IndexerSubsystem m_indexer) {
         // Store the reference to the IndexerSubsystem for use in shooting commands.
         this.m_indexer = m_indexer;
@@ -60,24 +62,23 @@ public class ShooterSubsystem extends SubsystemBase {
         config.Slot0.kI = 0.0;
         config.Slot0.kD = 0.0;
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        
-        shooterMotor1.getConfigurator().apply(config);
-        shooterMotor2.getConfigurator().apply(config);
 
-        // Set the second motor to follow the first motor with opposite direction to match motor layout.
-        shooterMotor2.setControl(new Follower(ShooterConstants.SHOOTER_MOTOR_ID1, MotorAlignmentValue.Opposed)); // Check if it should be Opposed or Aligned
+        shooterMotor1.getConfigurator().apply(config);
+
+        // Set Motor 2 to run physically opposed to Motor 1 on the shared shaft.
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        shooterMotor2.getConfigurator().apply(config);
 
         // Publish the radius efficiency to SmartDashboard so it can be tuned live.
         SmartDashboard.putNumber("Shooter/RadiusEfficiency", ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
     }
 
     /**
-     * Calculates the effective radius of the shooter wheel by applying an efficiency factor 
-     * to account for real-world conditions. Allows for tuning the efficiency factor via the 
-     * SmartDashboard to improve accuracy of RPS calculations.
-     * 
-     * @return Effective radius of the shooter wheel in meters.
-     */
+     * Calculates the effective radius of the shooter wheel by applying an efficiency factor 
+     * to account for real-world conditions. Allows for tuning the efficiency factor via the 
+     * SmartDashboard to improve accuracy of RPS calculations.
+     *      * @return Effective radius of the shooter wheel in meters.
+     */
     private double getEffectiveRadius() {
         double efficiency = SmartDashboard.getNumber("Shooter/RadiusEfficiency", ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
 
@@ -87,11 +88,10 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
-     * Calculates the required launch RPS (revolutions per second) to hit the target
-     * based on the current distance from the bumper to the target.
-     * 
-     * @return Required launch RPS to hit the target, or NaN if the shot is not feasible.
-     */
+     * Calculates the required launch RPS (revolutions per second) to hit the target
+     * based on the current distance from the bumper to the target.
+     *      * @return Required launch RPS to hit the target, or NaN if the shot is not feasible.
+     */
     public double calculateWheelRPS() {
         // Calculate the distance from the bumper to the target tag using Limelight data.
         double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight);
@@ -123,12 +123,11 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
-     * Aligns the robot to the target tag and shoots if the tag ID is valid.
-     * Valid tag IDs are in front of Red Hub (9 or 10), in front of Blue Hub (25 or 26), or 4 for testing in the RCH.
-     * 
-     * @param drivebase swerve subsystem used to drive toward the tag
-     * @return command that aligns to the tag and then shoots, or no-op if tag is invalid
-     */
+     * Aligns the robot to the target tag and shoots if the tag ID is valid.
+     * Valid tag IDs are in front of Red Hub (9 or 10), in front of Blue Hub (25 or 26), or 4 for testing in the RCH.
+     *      * @param drivebase swerve subsystem used to drive toward the tag
+     * @return command that aligns to the tag and then shoots, or no-op if tag is invalid
+     */
     public Command shootAlign(SwerveSubsystem drivebase) {
         return Commands.defer(() -> {
             double fid = LimelightHelpers.getFiducialID(ObjectRecognitionConstants.LIMELIGHT_NAME);
@@ -146,16 +145,19 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
-     * Runs the intake forward at a fixed speed for a certian period of time, then stops.
-     *
-     * @return command that spins the shooter using Limelight-based RPS until interrupted, in parallel with
-     * the indexer that feeds balls into the shooter, then stops the shooter and indexer when the command ends.
-     */
+     * Runs the intake forward at a fixed speed for a certian period of time, then stops.
+     *
+     * @return command that spins the shooter using Limelight-based RPS until interrupted, in parallel with
+     * the indexer that feeds balls into the shooter, then stops the shooter and indexer when the command ends.
+     */
     public Command shoot() {
         return Commands.deadline(
             runEnd(
                 this::setShooterRPS, // Continuously update the shooter RPS based on Limelight data while the command is active.
-                () -> shooterMotor1.setControl(new VelocityVoltage(0)) // Stop the shooter motor when the command ends.
+                () -> {
+                    shooterMotor1.setControl(new VelocityVoltage(0)); // Stop the shooter motor when the command ends.
+                    shooterMotor2.setControl(followerRequest);
+                }
             ),
             m_indexer.runIndexerCommand() // Run the indexer command in parallel to feed balls into the shooter while shooting. The indexer will stop when the shoot command ends.
         );
@@ -171,29 +173,31 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
-     * Sets the shooter motor to a RPS calculated via relevant data from Limelight.
-     */
+     * Sets the shooter motor to a RPS calculated via relevant data from Limelight.
+     */
     public void setShooterRPS() {
         double wheelRPS = calculateWheelRPS();
 
         // If the calculated RPS is not valid, stop the motor to avoid unintentional behavior.
         if (!Double.isFinite(wheelRPS)) {
             shooterMotor1.setControl(new VelocityVoltage(0));
+            shooterMotor2.setControl(followerRequest);
             return;
         }
 
         // Convert wheel RPS to motor RPS using the configured gear ratio.
         double motorRPS = wheelRPS * ShooterConstants.GEAR_RATIO;
         shooterMotor1.setControl(new VelocityVoltage(motorRPS));
+        shooterMotor2.setControl(followerRequest);
     }
 
     /**
-     * Sets the shooter motor speed for manual control. Positive speed shoots out,
-     * negative speed intakes in, and zero stops the motor.
-     * 
-     * @param speed motor output in the [-1, 1] range (sign controls direction)
-     */
+     * Sets the shooter motor speed for manual control. Positive speed shoots out,
+     * negative speed intakes in, and zero stops the motor.
+     *      * @param speed motor output in the [-1, 1] range (sign controls direction)
+     */
     public void setShooterSpeed(double speed) {
         shooterMotor1.set(speed);
+        shooterMotor2.setControl(followerRequest);
     }
 }
