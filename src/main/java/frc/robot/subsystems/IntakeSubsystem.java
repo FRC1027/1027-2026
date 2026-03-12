@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import java.util.function.BooleanSupplier;
-
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -17,12 +15,9 @@ import frc.robot.util.Constants.IntakeConstants;
 import frc.robot.util.Utils;
 
 /**
- * Subsystem that controls intake motors and coordinates operation with hopper state.
+ * Subsystem that controls the intake motor.
  */
 public class IntakeSubsystem extends SubsystemBase {
-    // Boolean supplier to check if the hopper is enlarged, allowing for coordinated control between subsystems.
-    private final BooleanSupplier isHopperEnlarged;
-
     // Intake motor
     private final SparkMax intakeMotor;
 
@@ -36,15 +31,10 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     /**
-     * Creates the intake subsystem and configures both intake motors.
-     *
-     * @param isHopperEnlarged supplier that reports whether hopper expansion allows intake operation
+     * Creates the intake subsystem and configures the intake motor.
      */
     @SuppressWarnings("removal") // Suppress warnings about deprecated ResetMode and PersistMode usage in SparkMax configuration.
-    public IntakeSubsystem(BooleanSupplier isHopperEnlarged) {
-        // Store the BooleanSupplier for checking hopper state, enabling dynamic response to hopper enlargement.
-        this.isHopperEnlarged = isHopperEnlarged;
-
+    public IntakeSubsystem() {
         // Initialize the intake motor using configured CAN ID.
         intakeMotor = new SparkMax(IntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
 
@@ -60,22 +50,17 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public Command manualIntakeCommand() {
         return runEnd(() -> {
-            if (isHopperEnlarged.getAsBoolean()) {
-                double rightTrigger = Utils.deadbandReturn(RobotContainer.mechXbox.getRightTriggerAxis(), 0.1);
-                double leftTrigger = -Utils.deadbandReturn(RobotContainer.mechXbox.getLeftTriggerAxis(), 0.1);
+            double rightTrigger = Utils.deadbandReturn(RobotContainer.mechXbox.getRightTriggerAxis(), 0.1);
+            double leftTrigger = -Utils.deadbandReturn(RobotContainer.mechXbox.getLeftTriggerAxis(), 0.1);
 
-                if (rightTrigger > 0.0){
-                    // Scale trigger input after deadband for smoother manual intake control.
-                    setIntakeSpeed(rightTrigger / 4);
-                } else if (leftTrigger < 0.0){
-                    // Scale trigger input after deadband for smoother manual outtake control.
-                    setIntakeSpeed(leftTrigger / 4);
-                } else {
-                    // No trigger input: stop the motor.
-                    setIntakeSpeed(0.0);
-                }
+            if (rightTrigger > 0.0){
+                // Scale trigger input after deadband for smoother manual intake control.
+                setIntakeSpeed(rightTrigger);
+            } else if (leftTrigger < 0.0){
+                // Scale trigger input after deadband for smoother manual outtake control.
+                setIntakeSpeed(leftTrigger);
             } else {
-                // If the hopper is not enlarged, stop the intake motor regardless of trigger input to prevent unintended behavior.
+                // No trigger input: stop the motor.
                 setIntakeSpeed(0.0);
             }
         }, () -> setIntakeSpeed(0.0));
@@ -88,9 +73,9 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public Command continuousIntakeCommand() { //
         return runEnd(
-            () -> setIntakeSpeed(0.5), // Run intake at 50% output while hopper is enlarged.
-            () -> setIntakeSpeed(0.0) // Stop intake when command is interupted
-        ).onlyWhile(isHopperEnlarged); // If the hopper begins to close while the intake is running, the intake command stops
+            () -> setIntakeSpeed(0.5), // Run intake at 100% output.
+            () -> setIntakeSpeed(0.0) // Stop intake when command is interupted.
+        );
     }
 
     /**

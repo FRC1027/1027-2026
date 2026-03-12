@@ -11,12 +11,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "HopperExpand/Retract"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "DO NOT USE (Large Left)"

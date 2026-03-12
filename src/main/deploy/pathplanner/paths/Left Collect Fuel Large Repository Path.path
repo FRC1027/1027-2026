@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.786927568049629,
-        "y": 5.645689268418669
+        "x": 7.122590361445783,
+        "y": 4.974783132530121
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.827542168674698,
-        "y": 5.619518072289156
+        "x": 7.811036144578313,
+        "y": 7.040120481927711
       },
       "prevControl": {
-        "x": 6.576204819277108,
-        "y": 5.608590361445782
+        "x": 5.6364216867469885,
+        "y": 7.247746987951807
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,14 +31,7 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "HopperExpand/Retract",
-      "waypointRelativePos": 0.5627791563275356,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -49,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -90.70731936854418
   },
   "reversed": false,
   "folder": "Collect Fuel Paths",

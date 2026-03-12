@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 6.849397590361446,
-        "y": 2.5816144578313254
+        "x": 7.9530963855421675,
+        "y": 0.9752409638554218
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.111662650602409,
-        "y": 2.559759036144579
+        "x": 7.9530963855421675,
+        "y": 1.2252409638554218
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 8.750819277108434,
-        "y": 2.461409638554217
+        "x": 7.83289156626506,
+        "y": 6.8543493975903615
       },
       "prevControl": {
-        "x": 8.500819277108434,
-        "y": 2.461409638554217
+        "x": 7.83289156626506,
+        "y": 6.6043493975903615
       },
       "nextControl": null,
       "isLocked": false,
@@ -49,13 +49,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 89.50178838738633
   },
   "reversed": false,
   "folder": "Collect Fuel Paths",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.98776039963971
   },
   "useDefaultConstraints": true
 }

@@ -25,7 +25,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import frc.robot.commands.auto.AutoShootAtTag4;
 import frc.robot.commands.DriveTowardTargetCommand;
-import frc.robot.subsystems.HopperSubsystem;
 import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -50,9 +49,6 @@ public class RobotContainer {
   private final SwerveSubsystem drivebase = new SwerveSubsystem(
       new File(Filesystem.getDeployDirectory(), "swerve")
   );
-
-  // Declaring the HopperSubsystem
-  private final HopperSubsystem m_hopper;
 
   // Declaring the IntakeSubsystem
   private final IntakeSubsystem m_intake;
@@ -124,11 +120,8 @@ public class RobotContainer {
     // Silence the joystick connection warning that can appear on the dashboard when using certain controllers
     DriverStation.silenceJoystickConnectionWarning(true);
 
-    // Initialize the HopperSubsystem
-    m_hopper = new HopperSubsystem();
-
     // Initialize the IntakeSubsystem
-    m_intake = new IntakeSubsystem(m_hopper::getHopperEnlarged);
+    m_intake = new IntakeSubsystem();
 
     // Initialize the IndexerSubsystem
     m_indexer = new IndexerSubsystem();
@@ -152,7 +145,6 @@ public class RobotContainer {
     NamedCommands.registerCommand("Shoot", m_shooter.shoot()); // Adds the shoot command as a named command for use in PathPlanner paths
     NamedCommands.registerCommand("ShootAlign", m_shooter.shootAlign(drivebase)); // Adds the shootAlign command as a named command for use in PathPlanner paths
     NamedCommands.registerCommand("Intake", m_intake.continuousIntakeCommand()); // Adds the intake command as a named command, for use in PathPlanner paths
-    NamedCommands.registerCommand("HopperExpand/Retract", m_hopper.hopperEnlarger2000Command()); // Adds the hopperEnlarger2000Command as a named command for use in PathPlanner paths
     NamedCommands.registerCommand("DriveToGamePiece", m_DriveTowardGamePieceCommand); // Adds the driveTowardGamePieceCommand as a named command for use in PathPlanner paths
 
     // Initialize the SendableChooser that adds all of the PathPlanner Autos to the dashboard
@@ -191,10 +183,6 @@ public class RobotContainer {
 
     /* ================= Mechanism Control Bindings ================= */
 
-    // Controls the hopper with the mechXbox bumpers (WILL NOT BE USED IN COMPITITION)
-    mechXbox.rightBumper().whileTrue(m_hopper.manualHopperControl());
-    mechXbox.leftBumper().whileTrue(m_hopper.manualHopperControl());
-
     // Controls the indexer with the right mechXbox joystick (WILL NOT BE USED IN COMPITITION)
     new Trigger(
       () -> Math.abs(mechXbox.getRightY()) > 0.1)
@@ -203,9 +191,6 @@ public class RobotContainer {
     // Controls the intake with the mechXbox triggers (WILL NOT BE USED IN COMPITITION)
     mechXbox.rightTrigger(0.1).whileTrue(m_intake.manualIntakeCommand());
     mechXbox.leftTrigger(0.1).whileTrue(m_intake.manualIntakeCommand());
-
-    // Controls the enlargment/retraction of the hopper with the `a` button on the mechXbox
-    mechXbox.a().onTrue(m_hopper.hopperEnlarger2000Command());
 
     // Controls the intake to run continuously via the `x` button, only while the hopper is enlarged.
     mechXbox.x().toggleOnTrue(m_intake.continuousIntakeCommand());

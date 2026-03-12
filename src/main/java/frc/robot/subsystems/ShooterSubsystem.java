@@ -42,10 +42,11 @@ public class ShooterSubsystem extends SubsystemBase {
     // Secondary shooter motor controller (follower).
     private final TalonFX shooterMotor2;
 
+    // The follow object that controls the 2nd motor's behavior
     private final StrictFollower followerRequest = new StrictFollower(ShooterConstants.SHOOTER_MOTOR_ID1);
 
     /**
-    * Creates the shooter subsystem, configures TalonFX control gains, and sets up
+     * Creates the shooter subsystem, configures TalonFX control gains, and sets up
      * follower behavior and dashboard tuning entries.
      */
     public ShooterSubsystem(IndexerSubsystem m_indexer) {
@@ -77,7 +78,8 @@ public class ShooterSubsystem extends SubsystemBase {
      * Calculates the effective radius of the shooter wheel by applying an efficiency factor 
      * to account for real-world conditions. Allows for tuning the efficiency factor via the 
      * SmartDashboard to improve accuracy of RPS calculations.
-     *      * @return Effective radius of the shooter wheel in meters.
+     * 
+     * @return Effective radius of the shooter wheel in meters.
      */
     private double getEffectiveRadius() {
         double efficiency = SmartDashboard.getNumber("Shooter/RadiusEfficiency", ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
@@ -90,7 +92,8 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * Calculates the required launch RPS (revolutions per second) to hit the target
      * based on the current distance from the bumper to the target.
-     *      * @return Required launch RPS to hit the target, or NaN if the shot is not feasible.
+     *
+     * @return Required launch RPS to hit the target, or NaN if the shot is not feasible.
      */
     public double calculateWheelRPS() {
         // Calculate the distance from the bumper to the target tag using Limelight data.
@@ -125,7 +128,8 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * Aligns the robot to the target tag and shoots if the tag ID is valid.
      * Valid tag IDs are in front of Red Hub (9 or 10), in front of Blue Hub (25 or 26), or 4 for testing in the RCH.
-     *      * @param drivebase swerve subsystem used to drive toward the tag
+     *
+     * @param drivebase swerve subsystem used to drive toward the tag
      * @return command that aligns to the tag and then shoots, or no-op if tag is invalid
      */
     public Command shootAlign(SwerveSubsystem drivebase) {
@@ -194,7 +198,8 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * Sets the shooter motor speed for manual control. Positive speed shoots out,
      * negative speed intakes in, and zero stops the motor.
-     *      * @param speed motor output in the [-1, 1] range (sign controls direction)
+     *
+     * @param speed motor output in the [-1, 1] range (sign controls direction)
      */
     public void setShooterSpeed(double speed) {
         shooterMotor1.set(speed);
