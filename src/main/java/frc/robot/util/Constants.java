@@ -105,6 +105,15 @@ public final class Constants {
     public static final int INTAKE_MOTOR_ID = 5;
   }
 
+  /* ================= Indexer ================= */
+
+  public static final class IndexerConstants {
+    private IndexerConstants() {} // Prevent instantiation
+
+    /** CAN ID for the indexer motor. */
+    public static final int INDEXER_MOTOR_ID = 28;
+  }
+
   /* ================= Object Recognition ================= */
 
   public static final class ObjectRecognitionConstants {
@@ -118,15 +127,6 @@ public final class Constants {
 
     /** Pipeline index for neural network object detection. */
     public static final int OBJECT_DETECTION_PIPELINE_INDEX = 1;
-  }
-
-  /* ================= Indexer ================= */
-
-  public static final class IndexerConstants {
-    private IndexerConstants() {} // Prevent instantiation
-
-    /** CAN ID for the indexer motor. */
-    public static final int INDEXER_MOTOR_ID = 28;
   }
 
   /* ================= Drivebase ================= */

@@ -74,6 +74,17 @@ public class IndexerSubsystem extends SubsystemBase {
     }
 
     /**
+     * Run the indexer in reverse for a short interval of time to release the intake/hopper mechanism
+     * 
+     * @return a command that runs the indexer motor in reverse for 3 seconds, then stops
+     */
+    public Command releaseIntakeCommand() {
+        return run(() -> setIndexerSpeed(-1.0))
+            .withTimeout(3)
+            .finallyDo(interrupted -> setIndexerSpeed(0));
+    }
+
+    /**
      * Sets the speed of the indexer motor.
      * @param speed The speed to set the motor to (between -1.0 and 1.0).
      */
