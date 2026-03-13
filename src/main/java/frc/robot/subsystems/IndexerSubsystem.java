@@ -11,15 +11,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import frc.robot.RobotContainer;
 import frc.robot.util.Constants.IndexerConstants;
-import frc.robot.util.Utils;
 
 /**
  * Subsystem that controls the indexer motor used to feed game pieces into the shooter.
  */
 public class IndexerSubsystem extends SubsystemBase {
-    
     // Indexer motor
     private final SparkMax indexerMotor;
 
@@ -50,12 +47,10 @@ public class IndexerSubsystem extends SubsystemBase {
      * @return command that allows manual control of the indexer motor.
      */
     public Command manualIndexerCommand() {
-        return runEnd(() -> {
-            // Read the mech controller right-stick Y axis for manual indexer speed control.
-            double yAxisJoystickValue = Utils.deadbandReturn(RobotContainer.mechXbox.getRightY(), 0.1);
-            
-            setIndexerSpeed(yAxisJoystickValue);
-        }, () -> setIndexerSpeed(0)); // Ensure the indexer motor stops when the command ends or is interrupted.
+        return runEnd(
+            () -> setIndexerSpeed(1),
+            () -> setIndexerSpeed(.0)
+        );
     }
 
     /**
@@ -79,7 +74,7 @@ public class IndexerSubsystem extends SubsystemBase {
      * @return a command that runs the indexer motor in reverse for 3 seconds, then stops
      */
     public Command releaseIntakeCommand() {
-        return run(() -> setIndexerSpeed(-1.0))
+        return run(() -> setIndexerSpeed(-0.5))
             .withTimeout(3)
             .finallyDo(interrupted -> setIndexerSpeed(0));
     }

@@ -58,7 +58,7 @@ public class DriveTowardTargetCommand extends Command {
     private final double maxRotation;
 
     // If true, run AprilTag mode; if false, run neural object detection mode.
-    private boolean detectAprilTag;
+    private boolean detectAprilTag = true;
 
     // Desired stopping distance from bumper to target in meters.
     private double STOP_DISTANCE = 0.5;

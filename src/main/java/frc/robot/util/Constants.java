@@ -38,7 +38,7 @@ public final class Constants {
     public static final double MAX_SPEED = Units.feetToMeters(14.5);
 
     /** Distance from the camera to the front bumper in meters. */
-    public static final double CAM_TO_SHOOTER_DISTANCE = 0.33; // UPDATE THIS VALUE
+    public static final double CAM_TO_SHOOTER_DISTANCE = Units.feetToMeters(1.5);
   }
 
   /* ================= Shooter ================= */
@@ -56,7 +56,7 @@ public final class Constants {
     public static final double GEAR_RATIO = 1.0;
 
     /** Minimum valid distance to the target (in meters) used to clamp Limelight-derived values. */
-    public static final double MINIMUM_DISTANCE = Units.inchesToMeters(31.5); // 90 inches to meters
+    public static final double MINIMUM_DISTANCE = Units.inchesToMeters(17); // 17 inches to meters
 
     /** Maximum valid distance to the target (in meters) used to clamp Limelight-derived values. */
     public static final double MAXIMUM_DISTANCE = Units.inchesToMeters(250); // 250 inches to meters
@@ -81,13 +81,13 @@ public final class Constants {
      * 4) Decrease the value to lower the computed RPS (shots go shorter).
      * 5) Re-test at a few distances to confirm the curve stays consistent.
      */
-    public static final double DEFAULT_RADIUS_EFFICIENCY = 0.85;
+    public static final double VELOCITY_EFFICIENCY = 1.21;
 
     /** Fixed shooter launch angle in radians (used in the projectile motion calculation). */
-    public static final double SHOOTER_ANGLE = Math.toRadians(55.0); // Convert 55 degrees to radians
+    public static final double SHOOTER_ANGLE = Math.toRadians(68.0); // Convert 55 degrees to radians
 
     /** Height of the shooter exit point above the floor, in meters. */
-    public static final double SHOOTER_HEIGHT = Units.inchesToMeters(27); // 27 inches to meters
+    public static final double SHOOTER_HEIGHT = Units.inchesToMeters(28); // 27 inches to meters
 
     /** Height of the target center above the floor, in meters. */
     public static final double GOAL_HEIGHT = Units.inchesToMeters(72); // 72 inches to meters
@@ -102,7 +102,7 @@ public final class Constants {
     private IntakeConstants() {} // Prevent instantiation
 
     /** CAN ID for the back intake motor. */
-    public static final int INTAKE_MOTOR_ID = 5;
+    public static final int INTAKE_MOTOR_ID = 29;
   }
 
   /* ================= Indexer ================= */

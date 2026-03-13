@@ -73,7 +73,7 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     public Command continuousIntakeCommand() { //
         return runEnd(
-            () -> setIntakeSpeed(0.5), // Run intake at 100% output.
+            () -> setIntakeSpeed(-1.0), // Run intake at 100% output.
             () -> setIntakeSpeed(0.0) // Stop intake when command is interupted.
         );
     }

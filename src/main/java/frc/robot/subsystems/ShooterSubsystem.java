@@ -8,7 +8,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
-//import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -71,22 +71,20 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotor2.getConfigurator().apply(config);
 
         // Publish the radius efficiency to SmartDashboard so it can be tuned live.
-        SmartDashboard.putNumber("Shooter/RadiusEfficiency", ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
+        SmartDashboard.putNumber("Shooter/VelocityEfficiency", ShooterConstants.VELOCITY_EFFICIENCY);
     }
 
     /**
-     * Calculates the effective radius of the shooter wheel by applying an efficiency factor 
+     * Calculates the effective velocity of the shooter wheel by applying an efficiency factor 
      * to account for real-world conditions. Allows for tuning the efficiency factor via the 
      * SmartDashboard to improve accuracy of RPS calculations.
      * 
-     * @return Effective radius of the shooter wheel in meters.
+     * @return Effective velocity of the shooter wheel in meters.
      */
-    private double getEffectiveRadius() {
-        double efficiency = SmartDashboard.getNumber("Shooter/RadiusEfficiency", ShooterConstants.DEFAULT_RADIUS_EFFICIENCY);
+    private double getAdjustedVelocity(double velocity) {
+        double efficiency = SmartDashboard.getNumber("Shooter/VelocityEfficiency", ShooterConstants.VELOCITY_EFFICIENCY);
 
-        // Clamp the efficiency to a reasonable range to avoid unrealistic tuning values.
-        efficiency = MathUtil.clamp(efficiency, 0.5, 1.0);
-        return ShooterConstants.SHOOTER_WHEEL_RADIUS * efficiency;
+        return velocity * efficiency;
     }
 
     /**
@@ -97,8 +95,8 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public double calculateWheelRPS() {
         // Calculate the distance from the bumper to the target tag using Limelight data.
-        double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight);
-        //double bumperToTagDistance = Units.inchesToMeters(126); //meters
+        //double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight);
+        double bumperToTagDistance = Units.inchesToMeters(111);
 
         // Return NaN if the distance data is missing or invalid.
         if (!Double.isFinite(bumperToTagDistance)) {
@@ -111,18 +109,20 @@ public class ShooterSubsystem extends SubsystemBase {
         }
 
         // Clamp the distance to reduce sensitivity to outliers or bad measurements.
-        bumperToTagDistance = MathUtil.clamp(bumperToTagDistance, ShooterConstants.MINIMUM_DISTANCE, ShooterConstants.MAXIMUM_DISTANCE);
+        //bumperToTagDistance = MathUtil.clamp(bumperToTagDistance, ShooterConstants.MINIMUM_DISTANCE, ShooterConstants.MAXIMUM_DISTANCE);
 
         // Calculate required launch velocity using projectile motion (ignoring air resistance).
         double velocity = Math.sqrt((ShooterConstants.GRAVITY_CONSTANT * bumperToTagDistance * bumperToTagDistance) / 
                                     (2 * Math.cos(ShooterConstants.SHOOTER_ANGLE) * Math.cos(ShooterConstants.SHOOTER_ANGLE) * 
                                     (bumperToTagDistance * Math.tan(ShooterConstants.SHOOTER_ANGLE) - ShooterConstants.HEIGHT_DIFFERENCE)));
 
-        // Convert linear velocity to wheel RPS using the effective radius (includes efficiency factor).
-        double rps = velocity / (2 * Math.PI * getEffectiveRadius());
+        double adjustedVelocity = getAdjustedVelocity(velocity);
+        
+        // Convert linear velocity to wheel RPS using the effective velocity value.
+        double rps = adjustedVelocity / (2 * Math.PI * ShooterConstants.SHOOTER_WHEEL_RADIUS);
 
-        // Return the calculated wheel speed in revolutions per second.
-        return rps;
+        // Return the calculated wheel speed in revolutions per second (Multiply by Compression Loss Compensation).
+        return rps * 1.03;
     }
 
     /**
@@ -162,8 +162,13 @@ public class ShooterSubsystem extends SubsystemBase {
                     shooterMotor1.setControl(new VelocityVoltage(0)); // Stop the shooter motor when the command ends.
                     shooterMotor2.setControl(followerRequest);
                 }
-            ),
+            ), 
             m_indexer.runIndexerCommand() // Run the indexer command in parallel to feed balls into the shooter while shooting. The indexer will stop when the shoot command ends.
+            // Commands.run(() -> {
+            //     if (Math.abs(shooterMotor1.getVelocity().getValueAsDouble() - calculateWheelRPS()) < 2) {
+            //         m_indexer.runIndexerCommand(); 
+            //     }
+            // })
         );
     }
 

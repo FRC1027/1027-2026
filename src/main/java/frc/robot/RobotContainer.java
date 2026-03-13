@@ -196,13 +196,16 @@ public class RobotContainer {
     mechXbox.x().toggleOnTrue(m_intake.continuousIntakeCommand());
 
     // Controls the shooter to align and shoot at a target tag with the `b` button on the driverXbox
-    mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
+    //mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
 
     // Releases the intake mechanism when the `a` button is pressed; one-time command
-    mechXbox.a().onTrue(m_indexer.releaseIntakeCommand());
+    //mechXbox.a().onTrue(m_indexer.releaseIntakeCommand());
 
     // Controls the shooter with the `y` button on the mechXbox
     mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
+    mechXbox.a().toggleOnTrue(m_shooter.shoot());
+
+    mechXbox.b().whileTrue(m_indexer.manualIndexerCommand());
 
     /* ================= Driver Control Bindings ================= */
 
