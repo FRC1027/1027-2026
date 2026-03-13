@@ -96,7 +96,7 @@ public class ShooterSubsystem extends SubsystemBase {
     public double calculateWheelRPS() {
         // Calculate the distance from the bumper to the target tag using Limelight data.
         //double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight);
-        double bumperToTagDistance = Units.inchesToMeters(111);
+        double bumperToTagDistance = Units.inchesToMeters(70);
 
         // Return NaN if the distance data is missing or invalid.
         if (!Double.isFinite(bumperToTagDistance)) {
