@@ -17,10 +17,10 @@ import frc.robot.util.Constants.IndexerConstants;
  * Subsystem that controls the indexer motor used to feed game pieces into the shooter.
  */
 public class IndexerSubsystem extends SubsystemBase {
-    // Indexer motor
+    // Indexer motor.
     private final SparkMax indexerMotor;
 
-    // Motor configuration for both intake motors
+    // Motor configuration for the intake motor.
     public static final SparkMaxConfig indexerConfig = new SparkMaxConfig();
 
     static {
@@ -30,7 +30,7 @@ public class IndexerSubsystem extends SubsystemBase {
     }
     
     /**
-     * Constructor for the IndexerSubsystem. Initializes the indexer motor and applies the shared configuration.
+     * Constructor for the IndexerSubsystem. Initializes the indexer motor and applies the configuration.
      */
     @SuppressWarnings("removal") // Suppress warnings about deprecated ResetMode and PersistMode usage in SparkMax configuration.
     public IndexerSubsystem() {
@@ -39,18 +39,6 @@ public class IndexerSubsystem extends SubsystemBase {
 
         // Configure the indexer motor using safe parameter reset and persistent parameter storage.
         indexerMotor.configure(indexerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    }
-
-    /**
-     * Returns a command that allows manual control of the indexer motor using the right Y-axis of the mechXbox controller.
-     * 
-     * @return command that allows manual control of the indexer motor.
-     */
-    public Command manualIndexerCommand() {
-        return runEnd(
-            () -> setIndexerSpeed(1),
-            () -> setIndexerSpeed(.0)
-        );
     }
 
     /**
@@ -69,18 +57,8 @@ public class IndexerSubsystem extends SubsystemBase {
     }
 
     /**
-     * Run the indexer in reverse for a short interval of time to release the intake/hopper mechanism
-     * 
-     * @return a command that runs the indexer motor in reverse for 3 seconds, then stops
-     */
-    public Command releaseIntakeCommand() {
-        return run(() -> setIndexerSpeed(-0.5))
-            .withTimeout(3)
-            .finallyDo(interrupted -> setIndexerSpeed(0));
-    }
-
-    /**
      * Sets the speed of the indexer motor.
+     * 
      * @param speed The speed to set the motor to (between -1.0 and 1.0).
      */
     public void setIndexerSpeed(double speed) {

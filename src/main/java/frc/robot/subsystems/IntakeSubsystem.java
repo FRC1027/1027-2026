@@ -10,18 +10,16 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import frc.robot.RobotContainer;
 import frc.robot.util.Constants.IntakeConstants;
-import frc.robot.util.Utils;
 
 /**
- * Subsystem that controls the intake motor.
+ * Subsystem that controls the intake motor used to collect game pieces off the floor.
  */
 public class IntakeSubsystem extends SubsystemBase {
-    // Intake motor
+    // Intake motor.
     private final SparkMax intakeMotor;
 
-    // Motor configuration for the intake motors
+    // Motor configuration for the intake motor.
     public static final SparkMaxConfig intakeConfig = new SparkMaxConfig();
 
     static {
@@ -31,45 +29,22 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     /**
-     * Creates the intake subsystem and configures the intake motor.
+     * Constructor for the IntakeSubsystem. Initializes the intake motor and applies the configuration.
      */
     @SuppressWarnings("removal") // Suppress warnings about deprecated ResetMode and PersistMode usage in SparkMax configuration.
     public IntakeSubsystem() {
         // Initialize the intake motor using configured CAN ID.
         intakeMotor = new SparkMax(IntakeConstants.INTAKE_MOTOR_ID, MotorType.kBrushless);
 
-        // Configure the intake motor with the shared configuration, using safe parameter reset and persistent parameter storage.
+        // Configure the intake motor using safe parameter reset and persistent parameter storage.
         intakeMotor.configure(intakeConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     /**
-     * Creates a command that allows manual control of the intake motor using the Xbox controller triggers.
-     * Right Trigger: Intakes (positive speed).
-     * Left Trigger: Outtakes (negative speed).
-     * No Trigger: Stops the motor.
-     */
-    public Command manualIntakeCommand() {
-        return runEnd(() -> {
-            double rightTrigger = Utils.deadbandReturn(RobotContainer.mechXbox.getRightTriggerAxis(), 0.1);
-            double leftTrigger = -Utils.deadbandReturn(RobotContainer.mechXbox.getLeftTriggerAxis(), 0.1);
-
-            if (rightTrigger > 0.0){
-                // Scale trigger input after deadband for smoother manual intake control.
-                setIntakeSpeed(rightTrigger);
-            } else if (leftTrigger < 0.0){
-                // Scale trigger input after deadband for smoother manual outtake control.
-                setIntakeSpeed(leftTrigger);
-            } else {
-                // No trigger input: stop the motor.
-                setIntakeSpeed(0.0);
-            }
-        }, () -> setIntakeSpeed(0.0));
-    }
-
-    /**
-     * Creates a command that continuously runs the intake motor at a fixed speed when the hopper is enlarged,
-     * and stops it when the hopper is not enlarged. This allows for automatic coordination between the intake
-     * and hopper subsystems based on the hopper's state.
+     * Creates a command that continuously runs the intake motor at a fixed speed.
+     * On interruption (when the bound button is toggled), stop the motor.
+     * 
+     * @return a command that runs the intake at full speed and stops on interruption.
      */
     public Command continuousIntakeCommand() { //
         return runEnd(

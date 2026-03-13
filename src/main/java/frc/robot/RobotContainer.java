@@ -75,8 +75,8 @@ public class RobotContainer {
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
    */
   SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
-      () -> driverXbox.getLeftY() * -1,
-      () -> driverXbox.getLeftX() * -1)
+      () -> driverXbox.getLeftY() * 1,
+      () -> driverXbox.getLeftX() * 1)
                                                             //.withControllerRotationAxis(driverXbox::getRightX)
       .withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
       .deadband(OperatorConstants.DEADBAND)
@@ -183,29 +183,15 @@ public class RobotContainer {
 
     /* ================= Mechanism Control Bindings ================= */
 
-    // Controls the indexer with the right mechXbox joystick (WILL NOT BE USED IN COMPITITION)
-    new Trigger(
-      () -> Math.abs(mechXbox.getRightY()) > 0.1)
-      .whileTrue(m_indexer.manualIndexerCommand());
-
-    // Controls the intake with the mechXbox triggers (WILL NOT BE USED IN COMPITITION)
-    mechXbox.rightTrigger(0.1).whileTrue(m_intake.manualIntakeCommand());
-    mechXbox.leftTrigger(0.1).whileTrue(m_intake.manualIntakeCommand());
-
-    // Controls the intake to run continuously via the `x` button, only while the hopper is enlarged.
+    // Controls the intake to run continuously via the `x` button.m
     mechXbox.x().toggleOnTrue(m_intake.continuousIntakeCommand());
 
-    // Controls the shooter to align and shoot at a target tag with the `b` button on the driverXbox
-    //mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
-
-    // Releases the intake mechanism when the `a` button is pressed; one-time command
-    //mechXbox.a().onTrue(m_indexer.releaseIntakeCommand());
+    // Controls the shooter to align and shoot at a target tag with the `b` button.
+    mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
 
     // Controls the shooter with the `y` button on the mechXbox
     mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
     mechXbox.a().toggleOnTrue(m_shooter.shoot());
-
-    mechXbox.b().whileTrue(m_indexer.manualIndexerCommand());
 
     /* ================= Driver Control Bindings ================= */
 
