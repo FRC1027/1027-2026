@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.CoastOut;
+import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.StrictFollower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -95,8 +97,8 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public double calculateWheelRPS() {
         // Calculate the distance from the bumper to the target tag using Limelight data.
-        //double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight);
-        double bumperToTagDistance = Units.inchesToMeters(70);
+        double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight);
+        //double bumperToTagDistance = Units.inchesToMeters(80);
 
         // Return NaN if the distance data is missing or invalid.
         if (!Double.isFinite(bumperToTagDistance)) {
@@ -159,7 +161,8 @@ public class ShooterSubsystem extends SubsystemBase {
             runEnd(
                 this::setShooterRPS, // Continuously update the shooter RPS based on Limelight data while the command is active.
                 () -> {
-                    shooterMotor1.setControl(new VelocityVoltage(0)); // Stop the shooter motor when the command ends.
+                    shooterMotor1.setControl(new NeutralOut());
+                    //shooterMotor1.setControl(new VelocityVoltage(0)); // Stop the shooter motor when the command ends.
                     shooterMotor2.setControl(followerRequest);
                 }
             ), 
@@ -176,8 +179,11 @@ public class ShooterSubsystem extends SubsystemBase {
     public Command fullSpeed(){
         return Commands.deadline(
             runEnd(
+            //run(
+                //() -> setShooterSpeed(1.0)),
                 () -> setShooterSpeed(1.0), 
-                () -> setShooterSpeed(0.0)),
+                () -> shooterMotor1.setControl(new NeutralOut())),
+                //() -> setShooterSpeed(0.0)),
             m_indexer.runIndexerCommand());
     }
 
@@ -189,7 +195,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
         // If the calculated RPS is not valid, stop the motor to avoid unintentional behavior.
         if (!Double.isFinite(wheelRPS)) {
-            shooterMotor1.setControl(new VelocityVoltage(0));
+            
+            //shooterMotor1.setControl(new VelocityVoltage(0));
             shooterMotor2.setControl(followerRequest);
             return;
         }

@@ -208,7 +208,7 @@ public class DriveTowardTargetCommand extends Command {
         }
 
         // B) Rotation control to reduce horizontal offset (tx).
-        double kP_turn = 1.0; // Proportional gain for turning
+        double kP_turn = 2.0; // Proportional gain for turning
         rotationSpeed = -kP_turn * tx; // Positive tx means target is right, so rotate right (negative Z).
 
         // Clamp rotation speed to our maximum allowed limit
@@ -233,7 +233,8 @@ public class DriveTowardTargetCommand extends Command {
     @Override
     public boolean isFinished() {
         // Rotation tolerance for considering the robot aligned
-        final double ROTATION_TOLERANCE = 0.05; // radians, adjust as needed
+        //final double ROTATION_TOLERANCE = 0.05; // radians, adjust as needed
+        final double ROTATION_TOLERANCE = -0.05; // radians, adjust as needed
 
         // 1) If we do not currently have a target, stop and let the driver re-trigger
         if (!currentState.hasTarget) {
