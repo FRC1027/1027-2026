@@ -42,7 +42,7 @@ public class Robot extends TimedRobot
   @Override
   public void robotInit()
   {
-    // Stops Phoenix Tuner from downloading diagnostic files to the RoboRio.
+    // Stops Phoenix Tuner from downloading diagnostic files to the RoboRio (Turn on if Advanced Debugging is Required).
     SignalLogger.stop();
 
     // Instantiate our RobotContainer. This will perform all our button bindings, and put our
