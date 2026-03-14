@@ -190,8 +190,10 @@ public class RobotContainer {
     mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
 
     // Controls the shooter with the `y` button on the mechXbox
-    mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
+    //mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
     mechXbox.a().toggleOnTrue(m_shooter.shoot());
+
+    mechXbox.y().toggleOnTrue(m_shooter.rightMotor());
 
     /* ================= Driver Control Bindings ================= */
 

@@ -81,7 +81,7 @@ public final class Constants {
      * 4) Decrease the value to lower the computed RPS (shots go shorter).
      * 5) Re-test at a few distances to confirm the curve stays consistent.
      */
-    public static final double VELOCITY_EFFICIENCY = 4.35;
+    public static final double VELOCITY_EFFICIENCY = 3.79;
 
     /** Fixed shooter launch angle in radians (used in the projectile motion calculation). */
     public static final double SHOOTER_ANGLE = Math.toRadians(68.0); // Convert 55 degrees to radians

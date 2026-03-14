@@ -8,6 +8,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -30,6 +31,18 @@ import java.util.Set;
  * Subsystem that controls the shooter flywheels and shot execution commands.
  */
 public class ShooterSubsystem extends SubsystemBase {
+    // private static final InterpolatingDoubleTreeMap shooterTableRPS = new InterpolatingDoubleTreeMap();
+
+    // static {
+    //     shooterTableRPS.put(0.5, 50.0); // distance (meters), RPS
+    // }
+
+    // private static final InterpolatingDoubleTreeMap shooterTableCoefficient = new InterpolatingDoubleTreeMap();
+
+    // static {
+
+    // }
+
     // Limelight NetworkTable used to fetch target 3D pose data.
     private final NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
@@ -72,6 +85,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
         // Publish the radius efficiency to SmartDashboard so it can be tuned live.
         SmartDashboard.putNumber("Shooter/VelocityEfficiency", ShooterConstants.VELOCITY_EFFICIENCY);
+
+        // Publish a changable shooter to target distance value in the case that the AprilTag is not visible.
+        SmartDashboard.putNumber("Shooter/TunableDistance", ShooterConstants.MINIMUM_DISTANCE);
     }
 
     /**
@@ -94,27 +110,23 @@ public class ShooterSubsystem extends SubsystemBase {
      * @return Required launch RPS to hit the target, or NaN if the shot is not feasible.
      */
     public double calculateWheelRPS() {
-        // Calculate the distance from the bumper to the target tag using Limelight data.
-        double bumperToTagDistance = Utils.calculateDistanceToTarget(limelight);
-        //double bumperToTagDistance = Units.inchesToMeters(80);
+        // Calculate the distance from the shooter to the target tag using Limelight data.
+        double shooterToTag = Utils.calculateDistanceToTarget(limelight);
 
         // Return NaN if the distance data is missing or invalid.
-        if (!Double.isFinite(bumperToTagDistance)) {
+        if (!Double.isFinite(shooterToTag)) {
             return Double.NaN;
         }
 
         // If the target is too high relative to the launch angle, the projectile motion equation would be invalid.
-        if (bumperToTagDistance * Math.tan(ShooterConstants.SHOOTER_ANGLE) <= ShooterConstants.HEIGHT_DIFFERENCE) {
+        if (shooterToTag * Math.tan(ShooterConstants.SHOOTER_ANGLE) <= ShooterConstants.HEIGHT_DIFFERENCE) {
             return Double.NaN;
         }
 
-        // Clamp the distance to reduce sensitivity to outliers or bad measurements.
-        //bumperToTagDistance = MathUtil.clamp(bumperToTagDistance, ShooterConstants.MINIMUM_DISTANCE, ShooterConstants.MAXIMUM_DISTANCE);
-
         // Calculate required launch velocity using projectile motion (ignoring air resistance).
-        double velocity = Math.sqrt((ShooterConstants.GRAVITY_CONSTANT * bumperToTagDistance * bumperToTagDistance) / 
+        double velocity = Math.sqrt((ShooterConstants.GRAVITY_CONSTANT * shooterToTag * shooterToTag) / 
                                     (2 * Math.cos(ShooterConstants.SHOOTER_ANGLE) * Math.cos(ShooterConstants.SHOOTER_ANGLE) * 
-                                    (bumperToTagDistance * Math.tan(ShooterConstants.SHOOTER_ANGLE) - ShooterConstants.HEIGHT_DIFFERENCE)));
+                                    (shooterToTag * Math.tan(ShooterConstants.SHOOTER_ANGLE) - ShooterConstants.HEIGHT_DIFFERENCE)));
 
         double adjustedVelocity = getAdjustedVelocity(velocity);
         
@@ -155,15 +167,23 @@ public class ShooterSubsystem extends SubsystemBase {
      * the indexer that feeds balls into the shooter, then stops the shooter and indexer when the command ends.
      */
     public Command shoot() {
-        return Commands.deadline(
-            runEnd(
-                this::setShooterRPS, // Continuously update the shooter RPS based on Limelight data while the command is active.
-                () -> {
-                    shooterMotor1.setControl(new NeutralOut()); // Stop the shooter motor when the command ends.
-                    shooterMotor2.setControl(followerRequest);
-                }
-            ), 
-            m_indexer.runIndexerCommand() // Run the indexer command in parallel to feed balls into the shooter while shooting. The indexer will stop when the shoot command ends.
+        final double[] targetRPS = new double[1];
+
+        return Commands.sequence(
+            // Step 1: calculate once
+            Commands.runOnce(() -> targetRPS[0] = calculateWheelRPS()),
+
+            // Step 2: run shooter using stored value
+            Commands.deadline(
+                runEnd(
+                    () -> setShooterRPS(targetRPS[0]),
+                    () -> {
+                        shooterMotor1.setControl(new NeutralOut());
+                        shooterMotor2.setControl(followerRequest);
+                    }
+                ),
+                m_indexer.runIndexerCommand()
+            )
         );
     }
 
@@ -180,12 +200,17 @@ public class ShooterSubsystem extends SubsystemBase {
             m_indexer.runIndexerCommand());
     }
 
+    public Command rightMotor(){
+        return runEnd(
+            () -> setShooterSpeed(0.5),
+            () -> shooterMotor2.setControl(new NeutralOut())
+        );
+    }
+
     /**
      * Sets the shooter motor to a RPS calculated via relevant data from Limelight.
      */
-    public void setShooterRPS() {
-        double wheelRPS = calculateWheelRPS();
-
+    public void setShooterRPS(double wheelRPS) {
         // If the calculated RPS is not valid, stop the motor to avoid unintentional behavior.
         if (!Double.isFinite(wheelRPS)) {
             shooterMotor1.setControl(new NeutralOut());
@@ -199,6 +224,10 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotor2.setControl(followerRequest);
     }
 
+    public void setShooterRPS() {
+        setShooterRPS(calculateWheelRPS());
+    }
+
     /**
      * Sets the shooter motor speed for manual control. Positive speed shoots out,
      * negative speed intakes in, and zero stops the motor.
@@ -206,7 +235,8 @@ public class ShooterSubsystem extends SubsystemBase {
      * @param speed motor output in the [-1, 1] range (sign controls direction)
      */
     public void setShooterSpeed(double speed) {
-        shooterMotor1.set(speed);
-        shooterMotor2.setControl(followerRequest);
+        //shooterMotor1.set(speed);
+        //shooterMotor2.setControl(followerRequest);
+        shooterMotor2.set(speed);
     }
 }
