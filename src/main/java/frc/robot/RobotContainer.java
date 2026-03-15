@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -79,7 +80,7 @@ public class RobotContainer {
       () -> driverXbox.getLeftY() * 1,
       () -> driverXbox.getLeftX() * 1)
                                                             //.withControllerRotationAxis(driverXbox::getRightX)
-      .withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
+      .withControllerRotationAxis(() -> driverXbox.getRightX() * 1) //NEGATIVE REMOVED
       .deadband(OperatorConstants.DEADBAND)
       .scaleTranslation(0.8)
       .allianceRelativeControl(true);
@@ -98,8 +99,8 @@ public class RobotContainer {
       .allianceRelativeControl(false);
 
   SwerveInputStream driveAngularVelocityKeyboard = SwerveInputStream.of(drivebase.getSwerveDrive(),
-      () -> -driverXbox.getLeftY(),
-      () -> -driverXbox.getLeftX())
+      () -> driverXbox.getLeftY(), //NEGATIVE REMOVED
+      () -> driverXbox.getLeftX()) //NEGATIVE REMOVED
       .withControllerRotationAxis(() -> driverXbox.getRawAxis(
           2))
       .deadband(OperatorConstants.DEADBAND)
@@ -182,6 +183,8 @@ public class RobotContainer {
     Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
     Command driveFieldOrientedDirectAngleKeyboard = drivebase.driveFieldOriented(driveDirectAngleKeyboard);
 
+    Command driveRobotOrientedCommand = drivebase.driveFieldOriented(driveRobotOriented);
+
     /* ================= Mechanism Control Bindings ================= */
 
     // Controls the intake to run continuously via the `x` button.m
@@ -207,7 +210,9 @@ public class RobotContainer {
     // Controls the robot to align with a target tag with the `x` button on the driverXbox
     //driverXbox.x().whileTrue(m_AlignTagCommand);
 
-    driverXbox.start().onTrue(new InstantCommand(()->drivebase.zeroGyroWithAlliance()));
+    driverXbox.a().toggleOnTrue(driveRobotOrientedCommand);
+
+    //driverXbox.start().onTrue(new InstantCommand(()->drivebase.zeroGyroWithAlliance()));
 
     if (RobotBase.isSimulation()) {
       drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
