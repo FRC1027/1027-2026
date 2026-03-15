@@ -187,6 +187,28 @@ public class ShooterSubsystem extends SubsystemBase {
         );
     }
 
+    public Command shootBrake(SwerveSubsystem drivebase) {
+        final double[] targetRPS = new double[1];
+
+        return Commands.sequence(
+            Commands.runOnce(() -> targetRPS[0] = calculateWheelRPS()),
+
+            Commands.deadline(
+                Commands.deadline(
+                    runEnd(
+                        () -> setShooterRPS(targetRPS[0]),
+                        () -> {
+                            shooterMotor1.setControl(new NeutralOut());
+                            shooterMotor2.setControl(followerRequest);
+                        }
+                    ),
+                    m_indexer.runIndexerCommand()
+                ),
+                new LockWheelsCommand(drivebase)
+            )
+        );
+    }
+
     // Method used for shooter testing to run the indexer and shooter at full speed without Limelight distance calculation
     public Command fullSpeed(){
         return Commands.deadline(

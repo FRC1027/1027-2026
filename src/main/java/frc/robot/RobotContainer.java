@@ -197,6 +197,8 @@ public class RobotContainer {
     //mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
     mechXbox.a().toggleOnTrue(m_shooter.shoot());
 
+    mechXbox.b().toggleOnTrue(m_shooter.shootBrake(drivebase));
+
     //mechXbox.y().toggleOnTrue(m_shooter.rightMotor());
 
     /* ================= Driver Control Bindings ================= */
