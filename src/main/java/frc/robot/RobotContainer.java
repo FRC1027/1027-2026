@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -187,24 +188,26 @@ public class RobotContainer {
     mechXbox.x().toggleOnTrue(m_intake.continuousIntakeCommand());
 
     // Controls the shooter to align and shoot at a target tag with the `b` button.
-    mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
+    //mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
 
     // Controls the shooter with the `y` button on the mechXbox
     //mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
     mechXbox.a().toggleOnTrue(m_shooter.shoot());
 
-    mechXbox.y().toggleOnTrue(m_shooter.rightMotor());
+    //mechXbox.y().toggleOnTrue(m_shooter.rightMotor());
 
     /* ================= Driver Control Bindings ================= */
 
     // Controls the robot to drive and align toward a game piece with the `y` button on the driverXbox
-    driverXbox.y().whileTrue(m_DriveTowardGamePieceCommand);
+    //driverXbox.y().whileTrue(m_DriveTowardGamePieceCommand);
 
     // Controls the robot to drive and align toward a target tag with the `b` button on the driverXbox
-    driverXbox.b().whileTrue(m_DriveTowardTagCommand);
+    //driverXbox.b().whileTrue(m_DriveTowardTagCommand);
 
     // Controls the robot to align with a target tag with the `x` button on the driverXbox
-    driverXbox.x().whileTrue(m_AlignTagCommand);
+    //driverXbox.x().whileTrue(m_AlignTagCommand);
+
+    driverXbox.start().onTrue(new InstantCommand(()->drivebase.zeroGyroWithAlliance()));
 
     if (RobotBase.isSimulation()) {
       drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
