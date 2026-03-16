@@ -77,10 +77,9 @@ public class RobotContainer {
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
    */
   SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
-      () -> driverXbox.getLeftY() * 1,
-      () -> driverXbox.getLeftX() * 1)
-                                                            //.withControllerRotationAxis(driverXbox::getRightX)
-      .withControllerRotationAxis(() -> driverXbox.getRightX() * 1) //NEGATIVE REMOVED
+      () -> driverXbox.getLeftY() * -1,
+      () -> driverXbox.getLeftX() * -1)
+      .withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
       .deadband(OperatorConstants.DEADBAND)
       .scaleTranslation(0.8)
       .allianceRelativeControl(true);
@@ -99,10 +98,9 @@ public class RobotContainer {
       .allianceRelativeControl(false);
 
   SwerveInputStream driveAngularVelocityKeyboard = SwerveInputStream.of(drivebase.getSwerveDrive(),
-      () -> driverXbox.getLeftY(), //NEGATIVE REMOVED
-      () -> driverXbox.getLeftX()) //NEGATIVE REMOVED
-      .withControllerRotationAxis(() -> driverXbox.getRawAxis(
-          2))
+      () -> driverXbox.getLeftY()* -1,
+      () -> driverXbox.getLeftX()* -1)
+      .withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
       .deadband(OperatorConstants.DEADBAND)
       .scaleTranslation(0.8)
       .allianceRelativeControl(true);
@@ -214,7 +212,7 @@ public class RobotContainer {
 
     driverXbox.a().toggleOnTrue(driveRobotOrientedCommand);
 
-    //driverXbox.start().onTrue(new InstantCommand(()->drivebase.zeroGyroWithAlliance()));
+    driverXbox.start().onTrue(Commands.runOnce(drivebase::zeroGyroWithAlliance, drivebase));
 
     if (RobotBase.isSimulation()) {
       drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
@@ -274,5 +272,13 @@ public class RobotContainer {
   public void setMotorBrake(boolean brake) {
     drivebase.setMotorBrake(brake);
   }
+
+  /**
+   * Zeros the gyro based on the current alliance.
+   * This ensures "forward" is always facing the opposing alliance wall.
+   */
+  public void zeroGyroToAlliance() {
+    drivebase.zeroGyroWithAlliance();
+  }
+  
 }
-// test

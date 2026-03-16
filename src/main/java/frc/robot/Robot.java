@@ -108,6 +108,9 @@ public class Robot extends TimedRobot
     m_robotContainer.setMotorBrake(true);
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
+    // Automatically zero the gyro with alliance awareness before Auto starts
+    m_robotContainer.zeroGyroToAlliance();
+
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null)
     {
@@ -138,6 +141,8 @@ public class Robot extends TimedRobot
     {
       CommandScheduler.getInstance().cancelAll();
     }
+    // Automatically zero the gyro with alliance awareness before Teleop starts
+    m_robotContainer.zeroGyroToAlliance();
   }
 
   /**
