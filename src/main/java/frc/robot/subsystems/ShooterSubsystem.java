@@ -153,7 +153,7 @@ public class ShooterSubsystem extends SubsystemBase {
                         // Once the alignment command finishes, run the shoot command while also locking the wheels to prevent movement during shooting.
                         .andThen(Commands.deadline(
                                 shoot(), // End the command when the shoot command finishes (which is when the driver releases the trigger)
-                                new LockWheelsCommand(drivebase)));
+                                new LockWheelsCommand(drivebase).repeatedly()));
             }
             // If no valid tag is seen, return a "do-nothing" command to avoid unintended motion.
             return Commands.none();

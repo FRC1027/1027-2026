@@ -20,13 +20,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import frc.robot.commands.auto.AutoShootAtTag4;
 import frc.robot.commands.DriveTowardTargetCommand;
+import frc.robot.commands.LockWheelsCommand;
 import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
@@ -185,19 +184,17 @@ public class RobotContainer {
 
     /* ================= Mechanism Control Bindings ================= */
 
-    // Controls the intake to run continuously via the `x` button.m
+    // Controls the intake to run continuously via the `x` button.
     mechXbox.x().toggleOnTrue(m_intake.continuousIntakeCommand());
 
     // Controls the shooter to align and shoot at a target tag with the `b` button.
-    //mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
+    mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
 
     // Controls the shooter with the `y` button on the mechXbox
     //mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
     mechXbox.a().toggleOnTrue(m_shooter.shoot());
 
-    mechXbox.b().toggleOnTrue(m_shooter.shootBrake(drivebase));
-
-    //mechXbox.y().toggleOnTrue(m_shooter.rightMotor());
+    mechXbox.y().toggleOnTrue(m_shooter.shootBrake(drivebase));
 
     /* ================= Driver Control Bindings ================= */
 
@@ -210,54 +207,58 @@ public class RobotContainer {
     // Controls the robot to align with a target tag with the `x` button on the driverXbox
     //driverXbox.x().whileTrue(m_AlignTagCommand);
 
+    driverXbox.x().whileTrue(new LockWheelsCommand(drivebase).repeatedly());
+
+    driverXbox.leftBumper().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
+
     driverXbox.a().toggleOnTrue(driveRobotOrientedCommand);
 
     driverXbox.start().onTrue(Commands.runOnce(drivebase::zeroGyroWithAlliance, drivebase));
 
-    if (RobotBase.isSimulation()) {
-      drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
-    } else {
+    //if (RobotBase.isSimulation()) {
+    //  drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
+    //} else {
       drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity);
-    }
+    //}
 
-    if (Robot.isSimulation()) {
-      Pose2d target = new Pose2d(new Translation2d(1, 4),
-          Rotation2d.fromDegrees(90));
-      //drivebase.getSwerveDrive().field.getObject("targetPose").setPose(target);
-      driveDirectAngleKeyboard.driveToPose(() -> target,
-          new ProfiledPIDController(5,
-              0,
-              0,
-              new Constraints(5, 2)),
-          new ProfiledPIDController(5,
-              0,
-              0,
-              new Constraints(Units.degreesToRadians(360), Units.degreesToRadians(180))));
+    // if (Robot.isSimulation()) {
+    //   Pose2d target = new Pose2d(new Translation2d(1, 4),
+    //       Rotation2d.fromDegrees(90));
+    //   //drivebase.getSwerveDrive().field.getObject("targetPose").setPose(target);
+    //   driveDirectAngleKeyboard.driveToPose(() -> target,
+    //       new ProfiledPIDController(5,
+    //           0,
+    //           0,
+    //           new Constraints(5, 2)),
+    //       new ProfiledPIDController(5,
+    //           0,
+    //           0,
+    //           new Constraints(Units.degreesToRadians(360), Units.degreesToRadians(180))));
       
-      driverXbox.start().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
-      driverXbox.button(1).whileTrue(drivebase.sysIdDriveMotorCommand());
-      driverXbox.button(2).whileTrue(Commands.runEnd(
-          () -> driveDirectAngleKeyboard.driveToPoseEnabled(true),
-          () -> driveDirectAngleKeyboard.driveToPoseEnabled(false)));
-    }
+    //   driverXbox.start().onTrue(Commands.runOnce(() -> drivebase.resetOdometry(new Pose2d(3, 3, new Rotation2d()))));
+    //   driverXbox.button(1).whileTrue(drivebase.sysIdDriveMotorCommand());
+    //   driverXbox.button(2).whileTrue(Commands.runEnd(
+    //       () -> driveDirectAngleKeyboard.driveToPoseEnabled(true),
+    //       () -> driveDirectAngleKeyboard.driveToPoseEnabled(false)));
+    // }
 
-    if (DriverStation.isTest()) {
-      drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity); // Overrides drive command above!
+    // if (DriverStation.isTest()) {
+    //   drivebase.setDefaultCommand(driveFieldOrientedAnglularVelocity); // Overrides drive command above!
 
-      driverXbox.x().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
-      driverXbox.y().whileTrue(drivebase.driveToDistanceCommand(1.0, 0.2));
-      driverXbox.start().onTrue((Commands.runOnce(drivebase::zeroGyro)));
-      driverXbox.back().whileTrue(drivebase.centerModulesCommand());
-      driverXbox.leftBumper().onTrue(Commands.none());
-      driverXbox.rightBumper().onTrue(Commands.none());
-    } else {
-      driverXbox.x().onTrue(Commands.runOnce(drivebase::addFakeVisionReading));
-      driverXbox.y().onTrue(Commands.runOnce(drivebase::centerModulesCommand));
-      driverXbox.start().whileTrue(Commands.none());
-      driverXbox.back().whileTrue(Commands.none());
-      driverXbox.leftBumper().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
-      driverXbox.rightBumper().onTrue(Commands.none());
-    }
+    //   driverXbox.x().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
+    //   driverXbox.y().whileTrue(drivebase.driveToDistanceCommand(1.0, 0.2));
+    //   driverXbox.start().onTrue((Commands.runOnce(drivebase::zeroGyro)));
+    //   driverXbox.back().whileTrue(drivebase.centerModulesCommand());
+    //   driverXbox.leftBumper().onTrue(Commands.none());
+    //   driverXbox.rightBumper().onTrue(Commands.none());
+    // } else {
+    //   driverXbox.x().onTrue(Commands.runOnce(drivebase::addFakeVisionReading));
+    //   driverXbox.y().onTrue(Commands.runOnce(drivebase::centerModulesCommand));
+    //   driverXbox.start().whileTrue(Commands.none());
+    //   driverXbox.back().whileTrue(Commands.none());
+    //   driverXbox.leftBumper().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
+    //   driverXbox.rightBumper().onTrue(Commands.none());
+    // }
   }
 
   /**
