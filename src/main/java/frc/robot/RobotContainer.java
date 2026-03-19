@@ -184,32 +184,34 @@ public class RobotContainer {
 
     /* ================= Mechanism Control Bindings ================= */
 
-    // Controls the intake to run continuously via the `x` button.
+    // Controls the intake to run continuously via the `x` button (TOGGLEABLE).
     mechXbox.x().toggleOnTrue(m_intake.continuousIntakeCommand());
 
     // Controls the shooter to align and shoot at a target tag with the `b` button.
     mechXbox.b().whileTrue(m_shooter.shootAlign(drivebase));
 
-    // Controls the shooter with the `y` button on the mechXbox
-    //mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
+    // TEST BINDING: Controls the shooter to shoot with the `a` button (TOGGLEABLE).
     mechXbox.a().toggleOnTrue(m_shooter.shoot());
 
-    mechXbox.y().toggleOnTrue(m_shooter.shootBrake(drivebase));
+    // TEST BINDING: Controls the shooter to run at full speed with the `y` button (TOGGLEABLE).
+    //mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
 
     /* ================= Driver Control Bindings ================= */
 
-    // Controls the robot to drive and align toward a game piece with the `y` button on the driverXbox
+    // Controls the robot to drive and align toward a game piece with the `y` button.
     //driverXbox.y().whileTrue(m_DriveTowardGamePieceCommand);
 
-    // Controls the robot to drive and align toward a target tag with the `b` button on the driverXbox
+    // Controls the robot to drive and align toward a target tag with the `b` button.
     //driverXbox.b().whileTrue(m_DriveTowardTagCommand);
 
-    // Controls the robot to align with a target tag with the `x` button on the driverXbox
+    // Controls the robot to align with a target tag with the `x` button.
     //driverXbox.x().whileTrue(m_AlignTagCommand);
 
+    // Controls the robot to lock its wheels with the `x` button (WHILE HELD).
     driverXbox.x().whileTrue(new LockWheelsCommand(drivebase).repeatedly());
 
-    driverXbox.leftBumper().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
+    // Alternative wheel lock binding
+    //driverXbox.leftBumper().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
 
     driverXbox.a().toggleOnTrue(driveRobotOrientedCommand);
 

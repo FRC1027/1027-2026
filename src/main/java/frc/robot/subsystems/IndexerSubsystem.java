@@ -42,8 +42,6 @@ public class IndexerSubsystem extends SubsystemBase {
     }
 
     /**
-     * Returns the current feed command used by shooter routines.
-     * 
      * Constructs a delayed command that starts the indexer and allows the shooter to spin up before
      * feeding, while ensuring that the indexer is stopped when the command ends or is interrupted.
      * 

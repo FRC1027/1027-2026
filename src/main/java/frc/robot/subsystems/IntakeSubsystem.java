@@ -44,11 +44,11 @@ public class IntakeSubsystem extends SubsystemBase {
      * Creates a command that continuously runs the intake motor at a fixed speed.
      * On interruption (when the bound button is toggled), stop the motor.
      * 
-     * @return a command that runs the intake at full speed and stops on interruption.
+     * @return a command that runs the intake at a set speed and stops on interruption.
      */
     public Command continuousIntakeCommand() { //
         return runEnd(
-            () -> setIntakeSpeed(-0.9), // Run intake at 100% output.
+            () -> setIntakeSpeed(-0.9), // Run intake at a set speed.
             () -> setIntakeSpeed(0.0) // Stop intake when command is interupted.
         );
     }

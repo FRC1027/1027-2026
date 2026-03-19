@@ -91,19 +91,6 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
-     * Calculates the effective velocity of the shooter wheel by applying an efficiency factor 
-     * to account for real-world conditions. Allows for tuning the efficiency factor via the 
-     * SmartDashboard to improve accuracy of RPS calculations.
-     * 
-     * @return Effective velocity of the shooter wheel in meters.
-     */
-    private double getAdjustedVelocity(double velocity) {
-        double efficiency = SmartDashboard.getNumber("Shooter/VelocityEfficiency", ShooterConstants.VELOCITY_EFFICIENCY);
-
-        return velocity * efficiency;
-    }
-
-    /**
      * Calculates the required launch RPS (revolutions per second) to hit the target
      * based on the current distance from the bumper to the target.
      *
@@ -128,7 +115,11 @@ public class ShooterSubsystem extends SubsystemBase {
                                     (2 * Math.cos(ShooterConstants.SHOOTER_ANGLE) * Math.cos(ShooterConstants.SHOOTER_ANGLE) * 
                                     (shooterToTag * Math.tan(ShooterConstants.SHOOTER_ANGLE) - ShooterConstants.HEIGHT_DIFFERENCE)));
 
-        double adjustedVelocity = getAdjustedVelocity(velocity);
+        // Allows for tuning the efficiency factor via the SmartDashboard to improve accuracy of RPS calculations.
+        double efficiency = SmartDashboard.getNumber("Shooter/VelocityEfficiency", ShooterConstants.VELOCITY_EFFICIENCY);
+
+        // Calculates the effective velocity of the shooter wheel by applying an efficiency factor to account for real-world conditions.
+        double adjustedVelocity = velocity * efficiency;
         
         // Convert linear velocity to wheel RPS using the effective velocity value.
         double rps = adjustedVelocity / (2 * Math.PI * ShooterConstants.SHOOTER_WHEEL_RADIUS);
@@ -136,6 +127,28 @@ public class ShooterSubsystem extends SubsystemBase {
         // Return the calculated wheel speed in revolutions per second (Multiply by Compression Loss Compensation).
         return rps * 1.03;
     }
+
+    /**
+     * Sets the shooter motor to a RPS calculated via relevant data from Limelight.
+     */
+    public void setShooterRPS() {
+        double wheelRPS = calculateWheelRPS();
+
+        // If the calculated RPS is not valid, stop the motor to avoid unintentional behavior.
+        if (!Double.isFinite(wheelRPS)) {
+            shooterMotor1.setControl(new NeutralOut());
+            shooterMotor2.setControl(followerRequest);
+            return;
+        }
+
+        // Convert wheel RPS to motor RPS using the configured gear ratio.
+        double motorRPS = wheelRPS * ShooterConstants.GEAR_RATIO;
+
+        // Apply the RPS to the shooter motors.
+        shooterMotor1.setControl(new VelocityVoltage(motorRPS));
+        shooterMotor2.setControl(followerRequest);
+    }
+
 
     /**
      * Aligns the robot to the target tag and shoots if the tag ID is valid.
@@ -163,53 +176,27 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * Runs the intake forward at a fixed speed for a certian period of time, then stops.
      *
-     * @return command that spins the shooter using Limelight-based RPS until interrupted, in parallel with
+     * @return a command that spins the shooter using Limelight-based RPS until interrupted, in parallel with
      * the indexer that feeds balls into the shooter, then stops the shooter and indexer when the command ends.
      */
     public Command shoot() {
-        final double[] targetRPS = new double[1];
-
-        return Commands.sequence(
-            // Step 1: calculate once
-            Commands.runOnce(() -> targetRPS[0] = calculateWheelRPS()),
-
-            // Step 2: run shooter using stored value
-            Commands.deadline(
-                runEnd(
-                    () -> setShooterRPS(targetRPS[0]),
-                    () -> {
-                        shooterMotor1.setControl(new NeutralOut());
-                        shooterMotor2.setControl(followerRequest);
-                    }
-                ),
-                m_indexer.runIndexerCommand()
-            )
+        return Commands.deadline(
+            runEnd(
+                this::setShooterRPS, // Continuously update the shooter RPS based on Limelight data while the command is active.
+                () -> {
+                    shooterMotor1.setControl(new NeutralOut()); // Stop the shooter motor when the command ends.
+                    shooterMotor2.setControl(followerRequest);
+                }
+            ), 
+            m_indexer.runIndexerCommand() // Run the indexer command in parallel to feed balls into the shooter while shooting. The indexer will stop when the shoot command ends.
         );
     }
 
-    public Command shootBrake(SwerveSubsystem drivebase) {
-        final double[] targetRPS = new double[1];
-
-        return Commands.sequence(
-            Commands.runOnce(() -> targetRPS[0] = calculateWheelRPS()),
-
-            Commands.deadline(
-                Commands.deadline(
-                    runEnd(
-                        () -> setShooterRPS(targetRPS[0]),
-                        () -> {
-                            shooterMotor1.setControl(new NeutralOut());
-                            shooterMotor2.setControl(followerRequest);
-                        }
-                    ),
-                    m_indexer.runIndexerCommand()
-                ),
-                new LockWheelsCommand(drivebase)
-            )
-        );
-    }
-
-    // Method used for shooter testing to run the indexer and shooter at full speed without Limelight distance calculation
+    /**
+     * A method used for shooter testing to run the indexer and shooter at full speed without Limelight distance calculation.
+     * 
+     * @return a command that runs the shooter at full speed in parallel with the intake.
+     */
     public Command fullSpeed(){
         return Commands.deadline(
             runEnd(
@@ -220,34 +207,6 @@ public class ShooterSubsystem extends SubsystemBase {
                 }
             ),
             m_indexer.runIndexerCommand());
-    }
-
-    public Command rightMotor(){
-        return runEnd(
-            () -> setShooterSpeed(0.5),
-            () -> shooterMotor2.setControl(new NeutralOut())
-        );
-    }
-
-    /**
-     * Sets the shooter motor to a RPS calculated via relevant data from Limelight.
-     */
-    public void setShooterRPS(double wheelRPS) {
-        // If the calculated RPS is not valid, stop the motor to avoid unintentional behavior.
-        if (!Double.isFinite(wheelRPS)) {
-            shooterMotor1.setControl(new NeutralOut());
-            shooterMotor2.setControl(followerRequest);
-            return;
-        }
-
-        // Convert wheel RPS to motor RPS using the configured gear ratio.
-        double motorRPS = wheelRPS * ShooterConstants.GEAR_RATIO;
-        shooterMotor1.setControl(new VelocityVoltage(motorRPS));
-        shooterMotor2.setControl(followerRequest);
-    }
-
-    public void setShooterRPS() {
-        setShooterRPS(calculateWheelRPS());
     }
 
     /**
