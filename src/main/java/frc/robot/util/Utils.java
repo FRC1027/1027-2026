@@ -1,13 +1,20 @@
 package frc.robot.util;
 
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.wpilibj.Timer;
 
+import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.Constants.RobotProperties;
 
 /**
  * Shared utility methods used across robot subsystems and commands.
  */
 public final class Utils {
+  // Stores the last valid distance calculated by the Limelight.
+  private static double lastValidDistance = 0.0;
+
+  // Stores the last time the AprilTag was seen.
+  private static double lastSeenTime = 0.0;
 
   private Utils() {} // Prevent instantiation
 
@@ -34,28 +41,49 @@ public final class Utils {
   /**
    * Calculates the Euclidean distance from the bumper to the target tag using Limelight data.
    * 
+   * @param limelight a Limelight object reference that can be used to retrieve pose information.
    * @return Distance from bumper to target tag in meters, or NaN if the Limelight pose is unavailable.
    */
   public static double calculateDistanceToTarget(NetworkTable limelight) {
     // Read the target pose in the camera coordinate frame (x = left/right, y = up/down, z = forward).
     double[] pose = limelight.getEntry("targetpose_cameraspace").getDoubleArray(new double[0]);
 
-    // Ensure we have valid pose data (at least 3 values for x, y, z).
-    if (pose.length < 3) {
-        return Double.NaN;
+    // Returns true if an AprilTag is currently in view; false if otherwise.
+    boolean hasTarget = LimelightHelpers.getTV(ObjectRecognitionConstants.LIMELIGHT_NAME);
+
+    // Gets the current time in seconds.
+    double currentTime = Timer.getFPGATimestamp();
+
+    if (hasTarget && pose.length >= 3){
+      double tx = pose[0]; // Horizontal offset (left/right) in meters.
+      //double ty = pose[1]; // Vertical offset (up/down) in meters.
+      double tz = pose[2]; // Forward distance (depth) in meters.
+
+      // Compute planar distance from camera to tag using X/Z components.
+      double cameraToTag = Math.sqrt(tx * tx + tz * tz);
+
+      // Convert from camera distance to shooter distance
+      double shooterToTag = Math.max(0.0, (cameraToTag + RobotProperties.CAM_TO_SHOOTER_DISTANCE));
+
+      // Print statement for debugging: should print true repeatedly if Limelight flicker mitigation works correctly.
+      System.out.println("TV: " + hasTarget + " Distance: " + shooterToTag);
+
+      // Sets the last valid shooter to tag distance that was calculated to the last valid distance.
+      lastValidDistance = shooterToTag;
+
+      // Sets the current time to the last time an AprilTag was seen.
+      lastSeenTime = currentTime;
+
+      // Return the distance from the shooter to the AprilTag.
+      return shooterToTag;
     }
 
-    double tx = pose[0]; // Horizontal offset (left/right) in meters.
-    //double ty = pose[1]; // Vertical offset (up/down) in meters.
-    double tz = pose[2]; // Forward distance (depth) in meters.
+    // Checks to see if we "just" lost the target, ignoring small Limelight detection fluctuations.
+    if (currentTime - lastSeenTime < ObjectRecognitionConstants.LIMELIGHT_TARGET_TIMEOUT){
+      return lastValidDistance;
+    }
 
-    // Compute planar distance from camera to tag using X/Z components.
-    double cameraToTag = Math.sqrt(tx * tx + tz * tz);
-
-    // Convert from camera distance to shooter distance
-    double shooterToTag = cameraToTag + RobotProperties.CAM_TO_SHOOTER_DISTANCE;
-
-    // Return the distance from the shooter to the AprilTag.
-    return Math.max(0.0, shooterToTag);
+    // If no AprilTag is detected, return NaN and exit the method.
+    return 0.0;
   }
 }

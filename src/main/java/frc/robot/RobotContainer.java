@@ -194,7 +194,7 @@ public class RobotContainer {
     mechXbox.a().toggleOnTrue(m_shooter.shoot());
 
     // TEST BINDING: Controls the shooter to run at full speed with the `y` button (TOGGLEABLE).
-    //mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
+    mechXbox.y().toggleOnTrue(m_shooter.fullSpeed());
 
     /* ================= Driver Control Bindings ================= */
 

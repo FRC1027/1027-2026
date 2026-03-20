@@ -127,6 +127,9 @@ public final class Constants {
 
     /** Pipeline index for neural network object detection. */
     public static final int OBJECT_DETECTION_PIPELINE_INDEX = 1;
+
+    /** The buffer for Limelight detection distance calculation, in seconds. */
+    public static final double LIMELIGHT_TARGET_TIMEOUT = 0.2;
   }
 
   /* ================= Drivebase ================= */

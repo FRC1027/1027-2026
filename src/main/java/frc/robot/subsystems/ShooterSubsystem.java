@@ -102,12 +102,12 @@ public class ShooterSubsystem extends SubsystemBase {
 
         // Return NaN if the distance data is missing or invalid.
         if (!Double.isFinite(shooterToTag)) {
-            return Double.NaN;
+            return 0.0;
         }
 
         // If the target is too high relative to the launch angle, the projectile motion equation would be invalid.
         if (shooterToTag * Math.tan(ShooterConstants.SHOOTER_ANGLE) <= ShooterConstants.HEIGHT_DIFFERENCE) {
-            return Double.NaN;
+            return 0.0;
         }
 
         // Calculate required launch velocity using projectile motion (ignoring air resistance).
@@ -216,8 +216,7 @@ public class ShooterSubsystem extends SubsystemBase {
      * @param speed motor output in the [-1, 1] range (sign controls direction)
      */
     public void setShooterSpeed(double speed) {
-        //shooterMotor1.set(speed);
-        //shooterMotor2.setControl(followerRequest);
-        shooterMotor2.set(speed);
+        shooterMotor1.set(speed);
+        shooterMotor2.setControl(followerRequest);
     }
 }
