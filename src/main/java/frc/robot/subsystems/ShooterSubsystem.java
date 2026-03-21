@@ -8,8 +8,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,18 +29,6 @@ import java.util.Set;
  * Subsystem that controls the shooter flywheels and shot execution commands.
  */
 public class ShooterSubsystem extends SubsystemBase {
-    // private static final InterpolatingDoubleTreeMap shooterTableRPS = new InterpolatingDoubleTreeMap();
-
-    // static {
-    //     shooterTableRPS.put(0.5, 50.0); // distance (meters), RPS
-    // }
-
-    // private static final InterpolatingDoubleTreeMap shooterTableCoefficient = new InterpolatingDoubleTreeMap();
-
-    // static {
-
-    // }
-
     // Limelight NetworkTable used to fetch target 3D pose data.
     private final NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
@@ -134,8 +120,8 @@ public class ShooterSubsystem extends SubsystemBase {
     public void setShooterRPS() {
         double wheelRPS = calculateWheelRPS();
 
-        // If the calculated RPS is not valid, stop the motor to avoid unintentional behavior.
-        if (!Double.isFinite(wheelRPS)) {
+        // If the calculated RPS is not valid or equal to 0, stop the motor to avoid unintentional behavior.
+        if (!Double.isFinite(wheelRPS) || wheelRPS == 0.0) {
             shooterMotor1.setControl(new NeutralOut());
             shooterMotor2.setControl(followerRequest);
             return;
@@ -161,7 +147,7 @@ public class ShooterSubsystem extends SubsystemBase {
         return Commands.defer(() -> {
             double fid = LimelightHelpers.getFiducialID(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
-            if (fid == 4 || fid == 9 || fid == 10 || fid == 25 || fid == 26) {
+            if (fid == 4 || fid == 10 || fid == 26) {
                 return new DriveTowardTargetCommand(drivebase, 0.0, 2.0) // Aligns to the target tag using only rotational movement (max speed = 0)
                         // Once the alignment command finishes, run the shoot command while also locking the wheels to prevent movement during shooting.
                         .andThen(Commands.deadline(
@@ -174,7 +160,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
-     * Runs the intake forward at a fixed speed for a certian period of time, then stops.
+     * Runs the shooter at varying speeds (dependant on calculated distance) for a certain period of time, then stops.
      *
      * @return a command that spins the shooter using Limelight-based RPS until interrupted, in parallel with
      * the indexer that feeds balls into the shooter, then stops the shooter and indexer when the command ends.
@@ -189,6 +175,28 @@ public class ShooterSubsystem extends SubsystemBase {
                 }
             ), 
             m_indexer.runIndexerCommand() // Run the indexer command in parallel to feed balls into the shooter while shooting. The indexer will stop when the shoot command ends.
+        ).until(() -> calculateWheelRPS() == 0.0);
+    }
+
+    /**
+     * Runs the shooter at a fixed speed for a certain period of time, then stops. Intended for shooting when
+     * the robot is pressed against the base of the hub.
+     * 
+     * @return a command that runs the shooter at a fixed speed until interrupted.
+     */
+    public Command shootClose() {
+        return Commands.deadline(
+            runEnd(
+                () -> {
+                    shooterMotor1.setControl(new VelocityVoltage(0.0)); // UPDATE THIS AFTER TESTING
+                    shooterMotor2.setControl(followerRequest);
+                },
+                () -> {
+                    shooterMotor1.setControl(new NeutralOut());
+                    shooterMotor2.setControl(followerRequest);
+                }
+            ),
+            m_indexer.runIndexerCommand()
         );
     }
 

@@ -84,7 +84,7 @@ public final class Constants {
     public static final double VELOCITY_EFFICIENCY = 4.35;
 
     /** Fixed shooter launch angle in radians (used in the projectile motion calculation). */
-    public static final double SHOOTER_ANGLE = Math.toRadians(68.0); // Convert 55 degrees to radians
+    public static final double SHOOTER_ANGLE = Math.toRadians(68.0); // Convert 68 degrees to radians
 
     /** Height of the shooter exit point above the floor, in meters. */
     public static final double SHOOTER_HEIGHT = Units.inchesToMeters(28); // 27 inches to meters

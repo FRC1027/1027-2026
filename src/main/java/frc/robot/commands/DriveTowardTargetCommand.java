@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -9,7 +10,6 @@ import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.LimelightHelpers.LimelightResults;
-//import frc.robot.util.LimelightHelpers.LimelightTarget_Detector;
 import frc.robot.util.Utils;
 
 /**
@@ -48,13 +48,13 @@ public class DriveTowardTargetCommand extends Command {
     // Limelight NetworkTable used to fetch pose/target state values for control.
     private final NetworkTable limelight = NetworkTableInstance.getDefault().getTable(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
-    // Instance of the SwerveSubsystem to control the robot's movement
+    // Instance of the SwerveSubsystem to control the robot's movement.
     private final SwerveSubsystem drivebase;
 
-    // Maximum forward speed limit (m/s)
+    // Maximum forward speed limit (m/s).
     private final double maxSpeed;
 
-    // Maximum rotation speed limit (rad/s)
+    // Maximum rotation speed limit (rad/s).
     private final double maxRotation;
 
     // If true, run AprilTag mode; if false, run neural object detection mode.
@@ -63,11 +63,11 @@ public class DriveTowardTargetCommand extends Command {
     // Desired stopping distance from bumper to target in meters.
     private double STOP_DISTANCE = 0.5;
 
-    // Current forward and rotation speeds
+    // Current forward and rotation speeds.
     private double forwardSpeed = 0.0;
     private double rotationSpeed = 0.0;
 
-    // Variables to store the latest tx, ty, tz values from the Limelight
+    // Variable to store the latest tx value from the Limelight.
     private double tx;
 
     /**
@@ -84,7 +84,7 @@ public class DriveTowardTargetCommand extends Command {
         this.maxSpeed = maxSpeed;
         this.maxRotation = maxRotation;
 
-        // Require the drivebase so no other drive commands run at the same time
+        // Require the drivebase so no other drive commands run at the same time.
         addRequirements(drivebase);
     }
 
@@ -107,7 +107,7 @@ public class DriveTowardTargetCommand extends Command {
             STOP_DISTANCE = 0.1; // In meters
         }
 
-        // Require the drivebase so no other drive commands run at the same time
+        // Require the drivebase so no other drive commands run at the same time.
         addRequirements(drivebase);
     }
 
@@ -124,8 +124,6 @@ public class DriveTowardTargetCommand extends Command {
 
         // Reset detection state to avoid stale data from previous runs.
         currentState.clear();
-
-        SmartDashboard.putString("LL Status/Error Type", "Searching for target...");
     }
 
     @Override
@@ -138,7 +136,6 @@ public class DriveTowardTargetCommand extends Command {
             // 1) Validate that a fiducial ID is currently detected.
             double fid = LimelightHelpers.getFiducialID(ObjectRecognitionConstants.LIMELIGHT_NAME);
             if (Double.isNaN(fid) || fid < 0.0) {
-                SmartDashboard.putString("LL Status/Error Type", "Tag ID not found");
                 currentState.clear();
                 stopRobot();
                 return;
@@ -151,7 +148,6 @@ public class DriveTowardTargetCommand extends Command {
 
             // 1) Ensure at least one neural-network detection is available.
             if (results.targets_Detector == null || results.targets_Detector.length == 0) {
-                SmartDashboard.putString("LL Status/Error Type", "No object visible");
                 currentState.clear();
                 stopRobot();
                 return;
@@ -168,7 +164,6 @@ public class DriveTowardTargetCommand extends Command {
         // 2) Check the "tv" flag for target validity.
         double tv = limelight.getEntry("tv").getDouble(0.0);
         if (tv < 1.0) {
-            SmartDashboard.putString("LL Status/Error Type", "No target visible");
             currentState.clear();
             stopRobot();
             return;
@@ -177,23 +172,29 @@ public class DriveTowardTargetCommand extends Command {
         // 3) Read target pose relative to the Limelight camera.
         double[] pose = limelight.getEntry("targetpose_cameraspace").getDoubleArray(new double[0]);
         if (pose == null || pose.length < 3) {
-            SmartDashboard.putString("LL Status/Error Type", "Invalid pose data");
             currentState.clear();
             stopRobot();
             return;
         }
 
-        // Use camera-space X as horizontal aiming offset.
-        tx = pose[0]; // Horizontal offset (left/right) in meters.
+        // Horizontal offset (left/right) in meters as aiming offset.
+        tx = pose[0];
+
+        // Print horizontal offset (tx) before additional offset is applied for debugging.
+        System.out.println("Alignment Offset: " + tx);
+        
+        // Apply an additional offset to the recorded horizontal offset (tx) depending if its offset to the left or right.
+        if (tx > 0){
+            // If horizontal offset (tx) is to the
+            tx = pose[0] + Units.inchesToMeters(3.25);
+        } else if (tx < 0){
+            // If horizontal offset (tx) is to the
+            tx = pose[0] - Units.inchesToMeters(3.25);
+        }
 
         // Calculate bumper-to-target distance from Limelight pose data.
         currentState.distance = Utils.calculateDistanceToTarget(limelight);
         currentState.hasTarget = true;
-
-        // Update SmartDashboard for debugging
-        SmartDashboard.putNumber("LL tx (m)", tx);
-        SmartDashboard.putNumber("LL bumper->target (m)", currentState.distance);
-        SmartDashboard.putString("LL Status/Error Type", "Target Locked");
 
         // --- CONTROL LOGIC ---
 
@@ -208,17 +209,13 @@ public class DriveTowardTargetCommand extends Command {
         }
 
         // B) Rotation control to reduce horizontal offset (tx).
-        double kP_turn = 2.0; // Proportional gain for turning
+        double kP_turn = 4.0; // Proportional gain for turning (Increase for faster rotation).
         rotationSpeed = -kP_turn * tx; // Positive tx means target is right, so rotate right (negative Z).
 
-        // Clamp rotation speed to our maximum allowed limit
+        // Clamp rotation speed to our maximum allowed limit.
         rotationSpeed = Math.max(-maxRotation, Math.min(maxRotation, rotationSpeed));
 
-        SmartDashboard.putNumber("LL ForwardSpeed", forwardSpeed);
-        SmartDashboard.putNumber("LL RotationSpeed", rotationSpeed);
-
-        // Apply the calculated speeds to the robot
-        // Translation2d(x, y) -> x is forward, y is left
+        // Apply the calculated speeds to the robot. Translation2d(x, y) -> x is forward, y is left.
         drivebase.drive(new Translation2d(forwardSpeed, 0), rotationSpeed, true);
     }
 
@@ -232,22 +229,21 @@ public class DriveTowardTargetCommand extends Command {
 
     @Override
     public boolean isFinished() {
-        // Rotation tolerance for considering the robot aligned
-        //final double ROTATION_TOLERANCE = 0.05; // radians, adjust as needed
-        final double ROTATION_TOLERANCE = -0.05; // radians, adjust as needed
+        // Rotation tolerance for considering the robot aligned, measured in radians.
+        final double ROTATION_TOLERANCE = 0.1;
 
-        // 1) If we do not currently have a target, stop and let the driver re-trigger
+        // 1) If we do not currently have a target, stop and let the driver re-trigger.
         if (!currentState.hasTarget) {
             return true;
         }
 
-        // 2) In drive mode (maxSpeed > 0), finish once we reach the stop distance
+        // 2) In drive mode (maxSpeed > 0), finish once we reach the stop distance.
         boolean reachedDistanceTarget = (maxSpeed > 0) && (currentState.distance <= STOP_DISTANCE);
 
-        // 3) Finish if aligned within rotation tolerance (align-only mode or while driving)
+        // 3) Finish if aligned within rotation tolerance (align-only mode or while driving).
         boolean alignedTarget = Math.abs(tx) <= ROTATION_TOLERANCE;
 
-        // Command finishes if either we’ve reached distance OR we are aligned
+        // Command finishes if either we’ve reached distance OR we are aligned.
         return reachedDistanceTarget || alignedTarget;
     }
 

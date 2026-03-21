@@ -76,14 +76,14 @@ public final class Utils {
 
       // Return the distance from the shooter to the AprilTag.
       return shooterToTag;
+    } else {
+      // Checks to see if we "just" lost the target, ignoring small Limelight detection fluctuations.
+      if (currentTime - lastSeenTime < ObjectRecognitionConstants.LIMELIGHT_TARGET_TIMEOUT){
+        return lastValidDistance;
+      }
     }
 
-    // Checks to see if we "just" lost the target, ignoring small Limelight detection fluctuations.
-    if (currentTime - lastSeenTime < ObjectRecognitionConstants.LIMELIGHT_TARGET_TIMEOUT){
-      return lastValidDistance;
-    }
-
-    // If no AprilTag is detected, return NaN and exit the method.
+    // If no AprilTag is detected, return 0 and exit the method.
     return 0.0;
   }
 }
