@@ -198,15 +198,6 @@ public class RobotContainer {
 
     /* ================= Driver Control Bindings ================= */
 
-    // Controls the robot to drive and align toward a game piece with the `y` button.
-    //driverXbox.y().whileTrue(m_DriveTowardGamePieceCommand);
-
-    // Controls the robot to drive and align toward a target tag with the `b` button.
-    //driverXbox.b().whileTrue(m_DriveTowardTagCommand);
-
-    // Controls the robot to align with a target tag with the `x` button.
-    //driverXbox.x().whileTrue(m_AlignTagCommand);
-
     // Controls the robot to lock its wheels with the `x` button (WHILE HELD).
     driverXbox.x().whileTrue(new LockWheelsCommand(drivebase).repeatedly());
 

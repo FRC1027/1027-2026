@@ -8,6 +8,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -82,9 +83,12 @@ public class ShooterSubsystem extends SubsystemBase {
      *
      * @return Required launch RPS to hit the target, or NaN if the shot is not feasible.
      */
-    public double calculateWheelRPS() {
+    public double calculateWheelRPS(double shooterToTag) {
         // Calculate the distance from the shooter to the target tag using Limelight data.
-        double shooterToTag = Utils.calculateDistanceToTarget(limelight);
+        // If a parameter of 0.0 is passed to the method, Limelight data is used.
+        if (shooterToTag == 0.0){
+            shooterToTag = Utils.calculateDistanceToTarget(limelight);
+        }
 
         // Return NaN if the distance data is missing or invalid.
         if (!Double.isFinite(shooterToTag)) {
@@ -118,7 +122,7 @@ public class ShooterSubsystem extends SubsystemBase {
      * Sets the shooter motor to a RPS calculated via relevant data from Limelight.
      */
     public void setShooterRPS() {
-        double wheelRPS = calculateWheelRPS();
+        double wheelRPS = calculateWheelRPS(0.0);
 
         // If the calculated RPS is not valid or equal to 0, stop the motor to avoid unintentional behavior.
         if (!Double.isFinite(wheelRPS) || wheelRPS == 0.0) {
@@ -134,7 +138,6 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotor1.setControl(new VelocityVoltage(motorRPS));
         shooterMotor2.setControl(followerRequest);
     }
-
 
     /**
      * Aligns the robot to the target tag and shoots if the tag ID is valid.
@@ -175,7 +178,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 }
             ), 
             m_indexer.runIndexerCommand() // Run the indexer command in parallel to feed balls into the shooter while shooting. The indexer will stop when the shoot command ends.
-        ).until(() -> calculateWheelRPS() == 0.0);
+        ).until(() -> calculateWheelRPS(0.0) == 0.0);
     }
 
     /**
@@ -188,7 +191,7 @@ public class ShooterSubsystem extends SubsystemBase {
         return Commands.deadline(
             runEnd(
                 () -> {
-                    shooterMotor1.setControl(new VelocityVoltage(0.0)); // UPDATE THIS AFTER TESTING
+                    shooterMotor1.setControl(new VelocityVoltage(calculateWheelRPS(Units.inchesToMeters(16)))); // UPDATE DISTANCE AFTER TESTING
                     shooterMotor2.setControl(followerRequest);
                 },
                 () -> {
