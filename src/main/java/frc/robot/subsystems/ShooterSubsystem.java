@@ -22,9 +22,11 @@ import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import frc.robot.util.Constants.ShooterConstants;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
+import frc.robot.util.ShooterInterpolationTable;
 import frc.robot.util.Utils;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 
 import java.util.Set;
@@ -56,6 +58,8 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * Creates the shooter subsystem, configures TalonFX control gains, and sets up
      * follower behavior and dashboard tuning entries.
+     * 
+     * @param m_indexer a reference to the IndexerSubsystem for use in parallel control of the subsystems.
      */
     public ShooterSubsystem(IndexerSubsystem m_indexer) {
         // Store the reference to the IndexerSubsystem for use in shooting commands.
@@ -83,19 +87,24 @@ public class ShooterSubsystem extends SubsystemBase {
 
         // Publish a changable shooter to target distance value in the case that the AprilTag is not visible.
         SmartDashboard.putNumber("Shooter/TunableDistance", ShooterConstants.MINIMUM_DISTANCE);
+
+        // Publish the options for RPS calculation to Elastic Dashboard. Default option uses projectile motion calculations.
+        SmartDashboard.setDefaultString("Shooter/RPSCalculationType", "RPS Projectile Motion");
+        SmartDashboard.putString("Shooter/RPSCalculationType", "RPS Interpolation Table");
+        SmartDashboard.putString("Shooter/RPSCalculationType", "Averaged RPS");
     }
 
     /**
-     * Calculates the required launch RPS (revolutions per second) to hit the target
-     * based on the current distance from the bumper to the target.
-     *
-     * @return Required launch RPS to hit the target, or NaN if the shot is not feasible.
-     */
-    public double calculateWheelRPS(double shooterToTag) {
-        // Calculate the distance from the shooter to the target tag using Limelight data.
-        // If a parameter of 0.0 is passed to the method, Limelight data is used.
-        if (shooterToTag == 0.0){
-            shooterToTag = Utils.calculateDistanceToTarget(limelight);
+     * Calculates the required launch RPS using projectile motion physics.
+     * 
+     * @param shooterToTag The precise distance to the target in meters.
+     * @return Theoretical required RPS, or 0.0 if mathematically invalid.
+     */
+    public double calculateTheoreticalRPS(double shooterToTag) {
+        // Calculates the distance from the shooter to the AprilTag.
+        // If shooterToTag is 0.0, then calculate distance using Limelight data. Otherwise, use parameter value.
+        if (shooterToTag == 0.0) {
+            shooterToTag = getDistance();
         }
 
         // Return NaN if the distance data is missing or invalid.
@@ -127,10 +136,46 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
+     * Calculate the required launch RPS using the data from the Interpolation Table.
+     * 
+     * @param shooterToTag the measured distance from the shooter to the AprilTag.
+     * @return the RPS recorded in the Interpolation Table.
+     */
+    public double calculateTableRPS(double shooterToTag) {
+        double tableRPS = ShooterInterpolationTable.getRPS(shooterToTag);
+        return tableRPS;
+    }
+
+    /**
+     * Average both the calculated projectile motion RPS and the calculated Interpolation Table RPS.
+     * 
+     * @param shooterToTag the measured distance from the shooter to the AprilTag.
+     * @return the averaged RPS to run the flywheels.
+     */
+    public double calculateAveragedRPS(double shooterToTag) {
+        // Get both the theoretical RPS and the empirical table RPS.
+        double theoreticalRPS = calculateTheoreticalRPS(0.0);
+        double tableRPS = ShooterInterpolationTable.getRPS(shooterToTag);
+
+        // Blend them via a tunable weight (1.0 = 100% table, 0.0 = 100% theoretical). Default is 0.5 (50/50 split).
+        double tableWeight = SmartDashboard.getNumber("Shooter/TableWeight", 0.5);
+        
+        return (tableRPS * tableWeight) + (theoreticalRPS * (1.0 - tableWeight));
+    }
+
+    /**
      * Sets the shooter motor to a RPS calculated via relevant data from Limelight.
      */
     public void setShooterRPS() {
-        double wheelRPS = calculateWheelRPS(0.0);
+        double wheelRPS = 0.0;
+
+        if (SmartDashboard.getString("Shooter/RPSCalculationType", "RPS Projectile Motion").equals("RPS Projectile Motion")) {
+            wheelRPS = calculateTheoreticalRPS(0.0);
+        } else if (SmartDashboard.getString("Shooter/RPSCalculationType", "RPS Projectile Motion").equals("RPS Interpolation Table")) {
+            wheelRPS = calculateTableRPS(getDistance());
+        } else if (SmartDashboard.getString("Shooter/RPSCalculationType", "RPS Projectile Motion").equals("Averaged RPS")) {
+            wheelRPS = calculateAveragedRPS(getDistance());
+        }
 
         // If the calculated RPS is not valid or equal to 0, stop the motor to avoid unintentional behavior.
         if (!Double.isFinite(wheelRPS) || wheelRPS == 0.0) {
@@ -186,7 +231,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 }
             ), 
             m_indexer.runIndexerCommand() // Run the indexer command in parallel to feed balls into the shooter while shooting. The indexer will stop when the shoot command ends.
-        ).until(() -> calculateWheelRPS(0.0) == 0.0);
+        ).until(() -> calculateTheoreticalRPS(0.0) == 0.0);
     }
 
     /**
@@ -199,7 +244,7 @@ public class ShooterSubsystem extends SubsystemBase {
         return Commands.deadline(
             runEnd(
                 () -> {
-                    shooterMotor1.setControl(new VelocityVoltage(calculateWheelRPS(Units.inchesToMeters(16)))); // UPDATE DISTANCE AFTER TESTING
+                    shooterMotor1.setControl(new VelocityVoltage(calculateTheoreticalRPS(Units.inchesToMeters(16)))); // UPDATE DISTANCE AFTER TESTING
                     shooterMotor2.setControl(followerRequest);
                 },
                 () -> {
@@ -239,6 +284,16 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotor2.setControl(followerRequest);
     }
 
+    /**
+     * Calculate the distance from the shooter to the AprilTag.
+     * 
+     * @return the distance from the shooter to the AprilTag.
+     */
+    public double getDistance() {
+        // Calculate the distance from the shooter to the target tag using Limelight data.
+        return Utils.calculateDistanceToTarget(limelight);
+    }
+
     // ========================================================================
     // NEW ODOMETRY TARGETING METHODS (Added for dry-coding/testing)
     // ========================================================================
@@ -269,8 +324,8 @@ public class ShooterSubsystem extends SubsystemBase {
             double timeOfFlight = initialDistance / ballVelocityMPS; 
             double totalTime = timeOfFlight + systemLatency;
             
-            // Using WPILib's fully-qualified path to avoid an extra import at the top
-            edu.wpi.first.math.kinematics.ChassisSpeeds speeds = m_drivebase.getSwerveDrive().getFieldVelocity();
+            // Using WPILib's fully-qualified path
+            ChassisSpeeds speeds = m_drivebase.getSwerveDrive().getFieldVelocity();
             double deltaX = speeds.vxMetersPerSecond * totalTime;
             double deltaY = speeds.vyMetersPerSecond * totalTime;
             

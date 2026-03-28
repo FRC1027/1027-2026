@@ -51,10 +51,12 @@ public final class Utils {
     // Returns true if an AprilTag is currently in view; false if otherwise.
     boolean hasTarget = LimelightHelpers.getTV(ObjectRecognitionConstants.LIMELIGHT_NAME);
 
+    double fid = LimelightHelpers.getFiducialID(ObjectRecognitionConstants.LIMELIGHT_NAME);
+
     // Gets the current time in seconds.
     double currentTime = Timer.getFPGATimestamp();
 
-    if (hasTarget && pose.length >= 3){
+    if (hasTarget && pose.length >= 3 && (fid == 4 || fid == 10 || fid == 26)){
       double tx = pose[0]; // Horizontal offset (left/right) in meters.
       //double ty = pose[1]; // Vertical offset (up/down) in meters.
       double tz = pose[2]; // Forward distance (depth) in meters.

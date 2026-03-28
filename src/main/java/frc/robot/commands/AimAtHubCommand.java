@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import java.util.function.DoubleSupplier;
@@ -47,8 +48,8 @@ public class AimAtHubCommand extends Command {
             double distanceMeters = currentPose.getTranslation().getDistance(targetHub);
             
             // Tunable constants for shoot-on-the-move
-            double timeOfFlight = distanceMeters / 12.0; // Estimate: 12 m/s ball speed
-            double totalTime = timeOfFlight + 0.15;      // Estimate: 0.15s system latency
+            double timeOfFlight = distanceMeters / SmartDashboard.getNumber("Shooter/BallVelocityMPS", 12.0);   // Estimate: 12 m/s ball speed
+            double totalTime = timeOfFlight + SmartDashboard.getNumber("Shooter/SystemLatency", 0.15);          // Estimate: 0.15s system latency
             
             // Pull field velocity directly from YAGSL
             ChassisSpeeds speeds = swerve.getSwerveDrive().getFieldVelocity();
