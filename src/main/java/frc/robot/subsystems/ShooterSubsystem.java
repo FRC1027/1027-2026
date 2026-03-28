@@ -23,6 +23,9 @@ import frc.robot.util.Constants.ShooterConstants;
 import frc.robot.util.Constants.ObjectRecognitionConstants;
 import frc.robot.util.LimelightHelpers;
 import frc.robot.util.Utils;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
 
 import java.util.Set;
 
@@ -44,6 +47,11 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // The follow object that controls the 2nd motor's behavior
     private final StrictFollower followerRequest = new StrictFollower(ShooterConstants.SHOOTER_MOTOR_ID1);
+
+    // --- NEW: Odometry Targeting Variables ---
+    private SwerveSubsystem m_drivebase;
+    private final Translation2d BLUE_HUB_CENTER = new Translation2d(4.626, 4.035);
+    private final double FIELD_LENGTH_METERS = 16.541;
 
     /**
      * Creates the shooter subsystem, configures TalonFX control gains, and sets up
@@ -229,5 +237,95 @@ public class ShooterSubsystem extends SubsystemBase {
     public void setShooterSpeed(double speed) {
         shooterMotor1.set(speed);
         shooterMotor2.setControl(followerRequest);
+    }
+
+    // ========================================================================
+    // NEW ODOMETRY TARGETING METHODS (Added for dry-coding/testing)
+    // ========================================================================
+
+    public void setDrivebase(SwerveSubsystem drivebase) {
+        this.m_drivebase = drivebase;
+        SmartDashboard.putNumber("Shooter/SweetSpotOffset", 0.3); 
+    }
+
+    public double getAdjustedTargetDistance(boolean isMoving) {
+        if (m_drivebase == null) return 0.0;
+
+        double sweetSpotOffsetMeters = SmartDashboard.getNumber("Shooter/SweetSpotOffset", 0.3);
+        double ballVelocityMPS = SmartDashboard.getNumber("Shooter/BallVelocityMPS", 12.0);
+        double systemLatency = SmartDashboard.getNumber("Shooter/SystemLatency", 0.15);
+        Translation2d targetHub = BLUE_HUB_CENTER;
+
+        var alliance = DriverStation.getAlliance();
+        if (alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red) {
+            targetHub = new Translation2d(FIELD_LENGTH_METERS - BLUE_HUB_CENTER.getX(), BLUE_HUB_CENTER.getY());
+        }
+
+        Pose2d currentPose = m_drivebase.getPose();
+
+        // --- NEW: VIRTUAL TARGET MATH ---
+        if (isMoving) {
+            double initialDistance = currentPose.getTranslation().getDistance(targetHub);
+            double timeOfFlight = initialDistance / ballVelocityMPS; 
+            double totalTime = timeOfFlight + systemLatency;
+            
+            // Using WPILib's fully-qualified path to avoid an extra import at the top
+            edu.wpi.first.math.kinematics.ChassisSpeeds speeds = m_drivebase.getSwerveDrive().getFieldVelocity();
+            double deltaX = speeds.vxMetersPerSecond * totalTime;
+            double deltaY = speeds.vyMetersPerSecond * totalTime;
+            
+            targetHub = new Translation2d(targetHub.getX() - deltaX, targetHub.getY() - deltaY);
+        }
+
+        double finalDistanceToCenter = currentPose.getTranslation().getDistance(targetHub);
+        return Math.max(0.0, finalDistanceToCenter - sweetSpotOffsetMeters);
+    }
+
+    public double calculateWheelRPSFromOdometry(boolean isMoving) {
+        double shooterToTarget = getAdjustedTargetDistance(isMoving);
+        
+        if (!Double.isFinite(shooterToTarget) || shooterToTarget == 0.0) {
+            return 0.0;
+        }
+
+        if (shooterToTarget * Math.tan(ShooterConstants.SHOOTER_ANGLE) <= ShooterConstants.HEIGHT_DIFFERENCE) {
+            return 0.0;
+        }
+
+        double velocity = Math.sqrt((ShooterConstants.GRAVITY_CONSTANT * shooterToTarget * shooterToTarget) / 
+                                    (2 * Math.cos(ShooterConstants.SHOOTER_ANGLE) * Math.cos(ShooterConstants.SHOOTER_ANGLE) * (shooterToTarget * Math.tan(ShooterConstants.SHOOTER_ANGLE) - ShooterConstants.HEIGHT_DIFFERENCE)));
+
+        double efficiency = SmartDashboard.getNumber("Shooter/VelocityEfficiency", ShooterConstants.VELOCITY_EFFICIENCY);
+        double adjustedVelocity = velocity * efficiency;
+        double rps = adjustedVelocity / (2 * Math.PI * ShooterConstants.SHOOTER_WHEEL_RADIUS);
+
+        return rps * 1.03;
+    }
+
+    public void setShooterRPSFromOdometry(boolean isMoving) {
+        double wheelRPS = calculateWheelRPSFromOdometry(isMoving);
+
+        if (!Double.isFinite(wheelRPS) || wheelRPS == 0.0) {
+            shooterMotor1.setControl(new NeutralOut());
+            shooterMotor2.setControl(followerRequest);
+            return;
+        }
+
+        double motorRPS = wheelRPS * ShooterConstants.GEAR_RATIO;
+        shooterMotor1.setControl(new VelocityVoltage(motorRPS));
+        shooterMotor2.setControl(followerRequest); // ensure StrictFollower spelling is correct based on your code
+    }
+
+    public Command shootOdometry(boolean isMoving) {
+        return Commands.deadline(
+            runEnd(
+                () -> setShooterRPSFromOdometry(isMoving), 
+                () -> {
+                    shooterMotor1.setControl(new NeutralOut()); 
+                    shooterMotor2.setControl(followerRequest);
+                }
+            ), 
+            m_indexer.runIndexerCommand() 
+        ).until(() -> calculateWheelRPSFromOdometry(isMoving) == 0.0);
     }
 }

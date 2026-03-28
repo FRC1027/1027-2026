@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import frc.robot.commands.auto.AutoShootAtTag4;
+import frc.robot.commands.AimAtHubCommand;
 import frc.robot.commands.DriveTowardTargetCommand;
 import frc.robot.commands.LockWheelsCommand;
 import frc.robot.subsystems.IndexerSubsystem;
@@ -128,6 +129,9 @@ public class RobotContainer {
     // Initialize the ShooterSubsystem
     m_shooter = new ShooterSubsystem(m_indexer);
 
+    // Bind the drivebase to the shooter for the new Odometry testing
+    m_shooter.setDrivebase(drivebase);
+
     // Initialize the DriveTowardTagCommand (Drive Mode) ** Uses AprilTag detection **
     m_DriveTowardTagCommand = new DriveTowardTargetCommand(drivebase, true);
 
@@ -207,6 +211,24 @@ public class RobotContainer {
     //driverXbox.a().toggleOnTrue(driveRobotOrientedCommand);
 
     driverXbox.start().onTrue(Commands.runOnce(drivebase::zeroGyroWithAlliance, drivebase));
+
+
+    // TEST BINDING: Run the NEW Odometry-based distance calculation for shooting with the Right/Left Trigger
+    // STATIC TEST: Right Trigger (Passes false moving)
+    mechXbox.rightTrigger(0.5).whileTrue(m_shooter.shootOdometry(false));
+    // MOVING TEST: Left Trigger (Passes true moving)
+    mechXbox.leftTrigger(0.5).whileTrue(m_shooter.shootOdometry(true));
+
+    // TEST BINDING: Auto-Aim at the Hub while holding the Right/Left Trigger
+    // STATIC TEST: Right Bumper (Passes false moving)
+    driverXbox.rightTrigger(0.5).whileTrue(
+        new AimAtHubCommand(drivebase, () -> -driverXbox.getLeftY(), () -> -driverXbox.getLeftX(), false)
+    );
+
+    // MOVING TEST: Left Trigger (Passes true moving)
+    driverXbox.leftTrigger(0.5).whileTrue(
+        new AimAtHubCommand(drivebase, () -> -driverXbox.getLeftY(), () -> -driverXbox.getLeftX(), true)
+    );
 
     //if (RobotBase.isSimulation()) {
     //  drivebase.setDefaultCommand(driveFieldOrientedDirectAngleKeyboard);
