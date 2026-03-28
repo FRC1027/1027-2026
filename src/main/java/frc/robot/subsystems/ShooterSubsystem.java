@@ -11,6 +11,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -89,9 +90,11 @@ public class ShooterSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Shooter/TunableDistance", ShooterConstants.MINIMUM_DISTANCE);
 
         // Publish the options for RPS calculation to Elastic Dashboard. Default option uses projectile motion calculations.
-        SmartDashboard.setDefaultString("Shooter/RPSCalculationType", "RPS Projectile Motion");
-        SmartDashboard.putString("Shooter/RPSCalculationType", "RPS Interpolation Table");
-        SmartDashboard.putString("Shooter/RPSCalculationType", "Averaged RPS");
+        SendableChooser<String> chooser = new SendableChooser<String>();
+        chooser.setDefaultOption("RPS Projectile Motion", "RPS Projectile Motion");
+        chooser.addOption("RPS Interpolation Table", "RPS Interpolation Table");
+        chooser.addOption("Averaged RPS", "Averaged RPS");
+        SmartDashboard.putData("Shooter/RPSCalculationType", chooser);
     }
 
     /**
@@ -300,7 +303,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public void setDrivebase(SwerveSubsystem drivebase) {
         this.m_drivebase = drivebase;
-        SmartDashboard.putNumber("Shooter/SweetSpotOffset", 0.3); 
+        SmartDashboard.putNumber("Shooter/SweetSpotOffset", 0.3);
+        SmartDashboard.putNumber("Shooter/BallVelocityMPS", 12.0);
+        SmartDashboard.putNumber("Shooter/SystemLatency", 0.15);
     }
 
     public double getAdjustedTargetDistance(boolean isMoving) {
